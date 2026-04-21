@@ -19,46 +19,6 @@
           ".write": "auth != null"
         }
       }
-    },
-
-    "users": {
-      ".read": "auth != null",
-      "$uid": {
-        ".write": "auth != null && auth.uid === $uid",
-        ".validate": "newData.hasChildren(['name'])"
-      }
-    },
-
-    "posts": {
-      ".read": "auth != null",
-      ".indexOn": ["status", "scheduled_date", "current_owner_id"],
-      "$postId": {
-        ".write": "auth != null && ((!data.exists() && newData.child('user_id').val() === auth.uid && newData.child('current_owner_id').val() === auth.uid) || (data.exists() && data.child('current_owner_id').val() === auth.uid))"
-      }
-    },
-
-    "conversations": {
-      "$convId": {
-        ".read": "auth != null && (data.child('participant_ids').child(auth.uid).val() === true || data.child('user1_id').val() === auth.uid || data.child('user2_id').val() === auth.uid)",
-
-        ".write": "auth != null && ((!data.exists() && newData.child('participant_ids').child(auth.uid).val() === true) || data.child('participant_ids').child(auth.uid).val() === true || data.child('user1_id').val() === auth.uid || data.child('user2_id').val() === auth.uid)",
-
-        "messages": {
-          ".indexOn": ["created_at"],
-          "$msgId": {
-            ".write": "auth != null && (root.child('conversations').child($convId).child('participant_ids').child(auth.uid).val() === true || root.child('conversations').child($convId).child('user1_id').val() === auth.uid || root.child('conversations').child($convId).child('user2_id').val() === auth.uid)"
-          }
-        }
-      }
-    },
-
-    "conversationMembers": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        "$convId": {
-          ".write": "auth != null"
-        }
-      }
     }
   }
 }

@@ -11,13 +11,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBkkC4qKCHMsr7xs7s7lk7OAfOubdaOJtc",
-  authDomain: "notification-dc72a.web.app",
-  projectId: "notification-dc72a",
-  databaseURL: "https://notification-dc72a-default-rtdb.firebaseio.com",
-  storageBucket: "notification-dc72a.firebasestorage.app",
-  messagingSenderId: "461811184321",
-  appId: "1:461811184321:web:9b9238681681b58d545a40"
+  apiKey: "AIzaSyDXhwm9eGBcK7I589vpYxhqI3EWLMK8qU0",
+  authDomain: "attendance-app-b047c.firebaseapp.com",
+  projectId: "attendance-app-b047c",
+  databaseURL: "https://attendance-app-b047c-default-rtdb.firebaseio.com",
+  storageBucket: "attendance-app-b047c.firebasestorage.app",
+  messagingSenderId: "4615884946",
+  appId: "1:4615884946:web:597976f564fd83fea0964b"
 };
 
 export const app = initializeApp(firebaseConfig);
