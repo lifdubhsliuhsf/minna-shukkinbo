@@ -1,0 +1,8 @@
+services:
+  web:
+    build: .
+    image: minna-shukkinbo:local
+    container_name: minna-shukkinbo
+    ports:
+      - "8081:80"
+    restart: unless-stopped

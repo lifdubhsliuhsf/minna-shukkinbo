@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>ログイン - みんなの出勤簿</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+<div class="max-w-sm mx-auto pt-16 px-4">
+  <h1 class="text-2xl font-bold mb-1 text-center">みんなの出勤簿</h1>
+  <p class="text-sm text-center text-gray-500 mb-6">タイムカード → 社労士提出用 xlsx</p>
+  <form id="loginForm" class="bg-white p-6 rounded-lg shadow space-y-4">
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">メールアドレス</label>
+      <input type="email" name="email" required autocomplete="email"
+        class="w-full border border-gray-300 rounded px-3 py-2" placeholder="example@mail.com">
+    </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">パスワード</label>
+      <input type="password" name="password" required autocomplete="current-password"
+        class="w-full border border-gray-300 rounded px-3 py-2">
+    </div>
+    <button id="submitBtn" class="w-full bg-black text-white py-2 rounded font-bold disabled:bg-gray-400 disabled:cursor-not-allowed">ログイン</button>
+    <div id="err" class="text-red-600 text-sm hidden"></div>
+  </form>
+  <div class="text-center mt-4">
+    <a href="/register" class="text-sm text-gray-500 underline">新規登録はこちら</a>
+  </div>
+</div>
+<script type="module">
+  import { auth, signInWithEmailAndPassword } from '/js/firebase-init.js';
+  import { redirectIfAuthed } from '/js/auth-guard.js';
+  redirectIfAuthed('/attendance');
+  const form = document.getElementById('loginForm');
+  const err = document.getElementById('err');
+  const submitBtn = document.getElementById('submitBtn');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.classList.add('hidden');
+    submitBtn.disabled = true; submitBtn.textContent = 'ログイン中…';
+    const fd = new FormData(form);
+    try {
+      await signInWithEmailAndPassword(auth, fd.get('email').trim(), fd.get('password'));
+      location.href = '/attendance';
+    } catch (ex) {
+      submitBtn.disabled = false; submitBtn.textContent = 'ログイン';
+      err.textContent = 'ログイン失敗: ' + (ex.code || ex.message);
+      err.classList.remove('hidden');
+    }
+  });
+</script>
+</body>
+</html>

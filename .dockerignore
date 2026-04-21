@@ -1,0 +1,11 @@
+.git
+.gitignore
+.firebaserc
+firebase.json
+database.rules.json
+Dockerfile
+docker-compose.yml
+.dockerignore
+node_modules
+.DS_Store
+**/.DS_Store

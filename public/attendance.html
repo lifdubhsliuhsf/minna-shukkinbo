@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>みんなの出勤簿</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .alert-cell { background: #fee2e2; color: #991b1b; font-weight: 700; }
+    .alert-row  { background: #fef3c7; }
+    .holiday-row{ background: #f3f4f6; color: #6b7280; }
+    .incomplete { background: #fef08a; }
+    .edited-row { background: #dbeafe; }
+    table.att { border-collapse: collapse; width: 100%; font-size: 12px; }
+    table.att th, table.att td { border: 1px solid #e5e7eb; padding: 4px 6px; text-align: right; white-space: nowrap; }
+    table.att th { background: #f9fafb; font-weight: 600; }
+    table.att td.left, table.att th.left { text-align: left; }
+    .ed-input { width: 60px; font-size: 11px; padding: 1px 4px; border: 1px solid #d1d5db; border-radius: 3px; text-align: right; }
+    .flash { position: fixed; top: 0.5rem; left: 50%; transform: translateX(-50%); padding: 0.5rem 1rem; border: 1px solid; border-radius: 4px; box-shadow: 0 6px 16px rgba(0,0,0,.15); z-index: 50; }
+    .flash-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+<div id="app" class="max-w-5xl mx-auto pb-10">
+  <header class="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center">
+      <h1 class="font-bold text-lg">🕒 みんなの出勤簿</h1>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="meLabel" class="text-xs text-gray-500"></span>
+      <button onclick="window.__logout()" class="text-sm text-gray-500">ログアウト</button>
+    </div>
+  </header>
+
+  <main class="px-3 py-3 space-y-4">
+    <!-- ① マスタ -->
+    <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
+      <div class="text-sm font-semibold">① 社員マスタ（給料みなし手当.xlsx）</div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <label class="inline-block">
+          <span class="text-xs bg-gray-800 text-white px-3 py-1.5 rounded cursor-pointer">マスタをアップロード</span>
+          <input id="masterInput" type="file" accept=".xlsx,.xls" class="hidden">
+        </label>
+        <button id="clearMasterBtn" class="text-xs text-gray-500 underline hidden">クリア</button>
+        <span id="masterStatus" class="text-xs text-gray-500">未読み込み</span>
+      </div>
+    </section>
+
+    <!-- ② 月次アップロード -->
+    <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
+      <div class="text-sm font-semibold">② タイムカード（毎月）</div>
+      <label for="fileInput" class="block border-2 border-dashed border-gray-300 rounded p-4 text-center cursor-pointer hover:bg-gray-50">
+        <div class="text-gray-700 text-sm font-semibold">タイムカードExcelを選択 / ドロップ</div>
+        <div class="text-xs text-gray-500 mt-1">例：ボーイタイムカード202603.xls</div>
+        <input id="fileInput" type="file" accept=".xls,.xlsx" class="hidden">
+      </label>
+      <div id="fileStatus" class="text-xs text-gray-500"></div>
+      <div id="errorBox" class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2"></div>
+    </section>
+
+    <!-- ③ 過去の月 -->
+    <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
+      <div class="text-sm font-semibold">③ 過去の出勤簿</div>
+      <div id="monthsList" class="text-sm text-gray-500">読み込み中…</div>
+    </section>
+
+    <!-- サマリ -->
+    <section id="summarySection" class="hidden bg-white rounded shadow-sm border border-gray-200 p-4 space-y-3">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <h2 class="font-bold">
+          <span id="ymLabel"></span> サマリ
+          <span id="countLabel" class="text-xs text-gray-500 font-normal"></span>
+        </h2>
+        <div class="flex gap-2">
+          <button id="downloadAllBtn" class="text-sm bg-gray-900 text-white px-3 py-1.5 rounded">全員分ダウンロード (xlsx)</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="att" id="summaryTable">
+          <thead>
+            <tr>
+              <th class="left">#</th>
+              <th class="left">氏名</th>
+              <th class="left">所属店舗</th>
+              <th class="left">部門/グレード</th>
+              <th>労働時間</th>
+              <th>残業時間</th>
+              <th>深夜</th>
+              <th class="left">アラート</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody"></tbody>
+        </table>
+      </div>
+      <div id="unmatchedBox" class="hidden text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2"></div>
+    </section>
+
+    <!-- 個人詳細 -->
+    <section id="detailSection" class="hidden bg-white rounded shadow-sm border border-gray-200 p-4 space-y-3">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <button id="backToSummary" class="text-sm text-gray-500 mr-2">← 一覧へ</button>
+          <span id="personLabel" class="font-bold"></span>
+        </div>
+        <button id="downloadOneBtn" class="text-sm bg-gray-900 text-white px-3 py-1.5 rounded">このシートだけダウンロード</button>
+      </div>
+      <div id="personAlerts" class="text-sm"></div>
+      <div class="text-xs text-gray-500">出勤/退勤セルをクリックで編集。空欄+保存で編集クリア。</div>
+      <div class="overflow-x-auto">
+        <table class="att" id="detailTable">
+          <thead>
+            <tr>
+              <th class="left">日付</th>
+              <th>出勤</th>
+              <th>退勤</th>
+              <th>休憩</th>
+              <th>労働時間</th>
+              <th>残業</th>
+              <th>深夜</th>
+              <th>週残業累計</th>
+              <th class="left">アラート</th>
+              <th class="left">原打刻</th>
+            </tr>
+          </thead>
+          <tbody id="detailBody"></tbody>
+          <tfoot id="detailFoot"></tfoot>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+  import { parseTimecardWorkbook, parseMasterWorkbook, rebuildRecordsFromRaw, exportAllToXlsx, exportOneToXlsx } from '/js/attendance.js';
+  import {
+    loadMaster, saveMaster, clearMaster,
+    saveMonth, loadMonth, listMonths, deleteMonth,
+    saveEdit, loadEdits,
+    monthDataToPeople, applyEdits,
+  } from '/js/attendance-store.js';
+  import { requireAuth } from '/js/auth-guard.js';
+  import { escapeHtml } from '/js/firebase-init.js';
+
+  const me = await requireAuth();
+  document.getElementById('meLabel').textContent = me.name ? `👤 ${me.name}` : '';
+
+  const $ = (id) => document.getElementById(id);
+  const state = {
+    records: [], year: null, month: null,
+    master: [], masterMeta: null,
+    months: [], edits: {}, detailIdx: null,
+  };
+
+  // ---- 初期化 ----
+  await initMaster();
+  await refreshMonthsList();
+
+  async function initMaster() {
+    try {
+      const m = await loadMaster();
+      state.master = m.entries || [];
+      state.masterMeta = { updated_at: m.updated_at, updated_by: m.updated_by };
+      paintMasterStatus();
+    } catch (e) { console.error(e); }
+  }
+  function paintMasterStatus() {
+    const st = $('masterStatus'), clr = $('clearMasterBtn');
+    if (state.master.length) {
+      const when = state.masterMeta?.updated_at ? new Date(state.masterMeta.updated_at).toLocaleDateString() : '';
+      st.textContent = `✓ マスタ登録済み（${state.master.length}名${when ? ' / 更新:' + when : ''}） 全デバイス同期`;
+      st.classList.remove('text-gray-500'); st.classList.add('text-green-700');
+      clr.classList.remove('hidden');
+    } else {
+      st.textContent = '未読み込み（アップすると他デバイスでも共有されます）';
+      st.classList.remove('text-green-700'); st.classList.add('text-gray-500');
+      clr.classList.add('hidden');
+    }
+  }
+  $('masterInput').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const entries = parseMasterWorkbook(await f.arrayBuffer());
+      await saveMaster(entries, me.id);
+      await initMaster(); flash(`マスタを更新 (${entries.length}名)`);
+      if (state.year) await reparseCurrent();
+    } catch (err) { showErr('マスタ読込エラー: ' + err.message); }
+  });
+  $('clearMasterBtn').addEventListener('click', async () => {
+    if (!confirm('マスタをクリアします。全デバイスに反映されます。OK?')) return;
+    await clearMaster(); await initMaster(); flash('マスタをクリアしました');
+    if (state.year) await reparseCurrent();
+  });
+
+  async function refreshMonthsList() {
+    const months = await listMonths();
+    state.months = months;
+    const el = $('monthsList');
+    if (!months.length) { el.textContent = '（まだ保存された月次データはありません）'; return; }
+    el.innerHTML = months.map(m => `
+      <div class="flex items-center gap-2 py-1 border-b last:border-b-0">
+        <button class="load-m text-blue-600 underline text-sm" data-y="${m.year}" data-m="${m.month}">${m.year}年${m.month}月</button>
+        <span class="text-xs text-gray-500">${m.count}名 / ${escapeHtml(m.filename || '(ファイル名なし)')}</span>
+        <button class="del-m text-xs text-red-500 ml-auto" data-y="${m.year}" data-m="${m.month}">削除</button>
+      </div>
+    `).join('');
+    el.querySelectorAll('.load-m').forEach(b => b.addEventListener('click', () => loadSavedMonth(+b.dataset.y, +b.dataset.m)));
+    el.querySelectorAll('.del-m').forEach(b => b.addEventListener('click', async () => {
+      const y = +b.dataset.y, m = +b.dataset.m;
+      if (!confirm(`${y}年${m}月のデータを削除します。OK?`)) return;
+      await deleteMonth(y, m); await refreshMonthsList(); flash('削除しました');
+    }));
+  }
+
+  async function loadSavedMonth(year, month) {
+    const data = await loadMonth(year, month);
+    if (!data) { showErr('データが見つかりません'); return; }
+    state.edits = await loadEdits(year, month) || {};
+    const people = monthDataToPeople(data);
+    applyEdits(people, state.edits);
+    state.records = rebuildRecordsFromRaw(people, year, month);
+    state.year = year; state.month = month;
+    renderSummary();
+    flash(`${year}年${month}月を読み込みました`);
+  }
+
+  async function reparseCurrent() {
+    if (!state.year) return;
+    await loadSavedMonth(state.year, state.month);
+  }
+
+  const drop = $('fileInput').parentElement;
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('bg-gray-50'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('bg-gray-50'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('bg-gray-50');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  $('fileInput').addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+  async function handleFile(file) {
+    hideErr();
+    $('fileStatus').textContent = `読み込み中: ${file.name}`;
+    try {
+      const buf = await file.arrayBuffer();
+      const { records, year, month } = parseTimecardWorkbook(buf, { master: state.master, filename: file.name });
+      state.records = records; state.year = year; state.month = month;
+      state.edits = {};
+      const existing = await loadMonth(year, month);
+      if (existing && !confirm(`${year}年${month}月のデータは既に保存されています。上書きしますか？`)) {
+        $('fileStatus').textContent = 'キャンセル（既存データを読み直します）';
+        await loadSavedMonth(year, month);
+        return;
+      }
+      await saveMonth(year, month, records, { filename: file.name }, me.id);
+      renderSummary();
+      await refreshMonthsList();
+      $('fileStatus').textContent = `${file.name} ✓ 保存完了（${records.length}名）`;
+      flash(`${year}年${month}月を保存しました`);
+    } catch (err) {
+      console.error(err);
+      showErr('エラー: ' + err.message);
+      $('fileStatus').textContent = '';
+    }
+  }
+
+  function renderSummary() {
+    $('summarySection').classList.remove('hidden');
+    $('detailSection').classList.add('hidden');
+    $('ymLabel').textContent = `${state.year}年${state.month}月`;
+    $('countLabel').textContent = `(${state.records.length}名)`;
+    const body = $('summaryBody'); body.innerHTML = '';
+    const unmatched = [];
+    state.records.forEach((r, idx) => {
+      const tr = document.createElement('tr');
+      const alertText = r.monthAlerts.length ? r.monthAlerts.join('／') : '';
+      const anyWeek = r.rows.some(row => row.alerts.some(a => a.startsWith('週')));
+      const anyIncomplete = r.rows.some(row => row.incomplete);
+      const anyEdit = r.rows.some(row => row.edited);
+      const flags = [];
+      if (alertText) flags.push(alertText);
+      if (anyWeek) flags.push('週40h超あり');
+      if (anyIncomplete) flags.push('打刻漏れ');
+      if (anyEdit) flags.push('編集あり');
+      tr.className = flags.length ? 'alert-row' : '';
+      if (state.master.length && !r.fullName && r.totals.workH > 0) unmatched.push(r.name);
+      const disp = r.fullName ? `${escapeHtml(r.fullName)}<span class="text-gray-400 text-[10px]"> (${escapeHtml(r.name)})</span>` : escapeHtml(r.name);
+      tr.innerHTML = `
+        <td class="left">${r.id}</td>
+        <td class="left">${disp}</td>
+        <td class="left">${escapeHtml(r.store || '-')}</td>
+        <td class="left">${escapeHtml([r.dept, r.grade].filter(Boolean).join(' / '))}</td>
+        <td>${r.totals.workH}</td>
+        <td>${r.totals.overtimeH}</td>
+        <td>${r.totals.nightH}</td>
+        <td class="left ${flags.length ? 'alert-cell' : ''}">${escapeHtml(flags.join('／'))}</td>
+        <td><button data-idx="${idx}" class="view-btn text-xs bg-gray-200 hover:bg-gray-300 px-2 py-0.5 rounded">詳細</button></td>
+      `;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', () => renderDetail(+b.dataset.idx)));
+    const ub = $('unmatchedBox');
+    if (state.master.length && unmatched.length) {
+      ub.classList.remove('hidden');
+      ub.innerHTML = `⚠ マスタに見つからない人（${unmatched.length}名）：${unmatched.map(escapeHtml).join('、')}`;
+    } else ub.classList.add('hidden');
+  }
+
+  function renderDetail(idx) {
+    const r = state.records[idx]; state.detailIdx = idx;
+    $('summarySection').classList.add('hidden');
+    $('detailSection').classList.remove('hidden');
+    const disp = r.fullName ? `${r.fullName}（${r.dept || '-'} / ${r.store || '-'}${r.grade ? ' ' + r.grade : ''}）` : `${r.name}（${r.dept || '-'}）`;
+    $('personLabel').textContent = `${disp} ${r.year}/${String(r.month).padStart(2, '0')}`;
+    $('personAlerts').innerHTML = r.monthAlerts.length
+      ? `<div class="text-red-700 bg-red-50 border border-red-200 rounded p-2">⚠ ${r.monthAlerts.map(escapeHtml).join('<br>')}</div>` : '';
+    const body = $('detailBody'); body.innerHTML = '';
+    for (const row of r.rows) {
+      const tr = document.createElement('tr');
+      let cls = '';
+      if (row.isHoliday && row.workH === 0) cls = 'holiday-row';
+      if (row.alerts.length) cls = 'alert-row';
+      if (row.incomplete) cls = 'incomplete';
+      if (row.status) cls = 'holiday-row';
+      if (row.edited) cls = 'edited-row';
+      tr.className = cls;
+      const statusNote = row.status ? `<span class="text-[10px] text-gray-500 ml-1">[${row.status}]</span>` : '';
+      tr.innerHTML = `
+        <td class="left">${r.month}/${row.day}(${row.weekday})${statusNote}</td>
+        <td><input class="ed-input in-t" data-day="${row.day}" value="${fmt(row.inH)}" placeholder="HH:MM"></td>
+        <td><input class="ed-input out-t" data-day="${row.day}" value="${fmt(row.outH)}" placeholder="HH:MM"></td>
+        <td>${row.breakH || ''}</td>
+        <td>${row.workH || ''}</td>
+        <td>${row.overtimeH || ''}</td>
+        <td>${row.nightH || ''}</td>
+        <td>${row.weekOTCum || ''}</td>
+        <td class="left ${row.alerts.length ? 'alert-cell' : ''}">${escapeHtml(row.alerts.join('／'))}</td>
+        <td class="left text-gray-500 text-[10px]">${escapeHtml(row.punches.join(' / '))}</td>
+      `;
+      body.appendChild(tr);
+    }
+    body.querySelectorAll('.ed-input').forEach(inp => {
+      inp.addEventListener('change', async () => {
+        const day = +inp.dataset.day;
+        const tr = inp.closest('tr');
+        const inV = tr.querySelector('.in-t').value.trim();
+        const outV = tr.querySelector('.out-t').value.trim();
+        const validTime = s => !s || /^\d{1,2}:\d{2}$/.test(s);
+        if (!validTime(inV) || !validTime(outV)) { alert('HH:MM 形式で入力してください'); return; }
+        if (!inV && !outV) {
+          await saveEdit(r.year, r.month, r.id, day, null);
+          const safeId = String(r.id).replace(/[.#$\[\]\/]/g, '_');
+          if (state.edits[safeId]) delete state.edits[safeId][day];
+        } else {
+          await saveEdit(r.year, r.month, r.id, day, { inTime: inV, outTime: outV, note: 'manual' });
+          const safeId = String(r.id).replace(/[.#$\[\]\/]/g, '_');
+          state.edits[safeId] = state.edits[safeId] || {};
+          state.edits[safeId][day] = { inTime: inV, outTime: outV, note: 'manual' };
+        }
+        recompute(); renderDetail(state.detailIdx); flash(`${r.month}/${day} 保存`);
+      });
+    });
+    $('detailFoot').innerHTML = `
+      <tr class="font-bold bg-gray-100">
+        <td class="left">合計</td><td></td><td></td><td></td>
+        <td>${r.totals.workH}</td>
+        <td>${r.totals.overtimeH}</td>
+        <td>${r.totals.nightH}</td>
+        <td></td><td></td><td></td>
+      </tr>`;
+    $('downloadOneBtn').onclick = () => exportOneToXlsx(r);
+  }
+
+  function recompute() {
+    const people = state.records.map(r => ({
+      id: r.id, name: r.name, dept: r.dept,
+      fullName: r.fullName, store: r.store, grade: r.grade,
+      days: r._rawDays || [],
+    }));
+    applyEdits(people, state.edits);
+    state.records = rebuildRecordsFromRaw(people, state.year, state.month);
+  }
+
+  $('backToSummary').addEventListener('click', renderSummary);
+  $('downloadAllBtn').addEventListener('click', () => {
+    if (!state.records.length) return;
+    const fn = `出勤簿_${state.year}${String(state.month).padStart(2, '0')}.xlsx`;
+    exportAllToXlsx(state.records, { filename: fn });
+  });
+
+  function fmt(h) {
+    if (h == null || isNaN(h)) return '';
+    const hh = Math.floor(h) % 24, mm = Math.round((h - Math.floor(h)) * 60);
+    return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  }
+  function flash(msg) {
+    const el = document.createElement('div');
+    el.className = 'flash flash-ok';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }
+  function showErr(msg) { const b = $('errorBox'); b.classList.remove('hidden'); b.textContent = msg; }
+  function hideErr() { $('errorBox').classList.add('hidden'); }
+</script>
+</body>
+</html>
