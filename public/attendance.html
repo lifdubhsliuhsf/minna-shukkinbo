@@ -37,22 +37,9 @@
   </header>
 
   <main class="px-3 py-3 space-y-4">
-    <!-- ① マスタ -->
+    <!-- ① 月次アップロード -->
     <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
-      <div class="text-sm font-semibold">① 社員マスタ（給料みなし手当.xlsx）</div>
-      <div class="flex items-center gap-2 flex-wrap">
-        <label class="inline-block">
-          <span class="text-xs bg-gray-800 text-white px-3 py-1.5 rounded cursor-pointer">マスタをアップロード</span>
-          <input id="masterInput" type="file" accept=".xlsx,.xls" class="hidden">
-        </label>
-        <button id="clearMasterBtn" class="text-xs text-gray-500 underline hidden">クリア</button>
-        <span id="masterStatus" class="text-xs text-gray-500">未読み込み</span>
-      </div>
-    </section>
-
-    <!-- ② 月次アップロード -->
-    <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
-      <div class="text-sm font-semibold">② タイムカード（毎月）</div>
+      <div class="text-sm font-semibold">① タイムカード（毎月）</div>
       <label for="fileInput" class="block border-2 border-dashed border-gray-300 rounded p-4 text-center cursor-pointer hover:bg-gray-50">
         <div class="text-gray-700 text-sm font-semibold">タイムカードExcelを選択 / ドロップ</div>
         <div class="text-xs text-gray-500 mt-1">例：ボーイタイムカード202603.xls</div>
@@ -62,9 +49,9 @@
       <div id="errorBox" class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2"></div>
     </section>
 
-    <!-- ③ 過去の月 -->
+    <!-- ② 過去の月 -->
     <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
-      <div class="text-sm font-semibold">③ 過去の出勤簿</div>
+      <div class="text-sm font-semibold">② 過去の出勤簿</div>
       <div id="monthsList" class="text-sm text-gray-500">読み込み中…</div>
     </section>
 
@@ -85,8 +72,7 @@
             <tr>
               <th class="left">#</th>
               <th class="left">氏名</th>
-              <th class="left">所属店舗</th>
-              <th class="left">部門/グレード</th>
+              <th class="left">部門</th>
               <th>労働時間</th>
               <th>残業時間</th>
               <th>深夜</th>
@@ -97,7 +83,6 @@
           <tbody id="summaryBody"></tbody>
         </table>
       </div>
-      <div id="unmatchedBox" class="hidden text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2"></div>
     </section>
 
     <!-- 個人詳細 -->
@@ -136,9 +121,8 @@
 </div>
 
 <script type="module">
-  import { parseTimecardWorkbook, parseMasterWorkbook, rebuildRecordsFromRaw, exportAllToXlsx, exportOneToXlsx } from '/js/attendance.js';
+  import { parseTimecardWorkbook, rebuildRecordsFromRaw, exportAllToXlsx, exportOneToXlsx } from '/js/attendance.js';
   import {
-    loadMaster, saveMaster, clearMaster,
     saveMonth, loadMonth, listMonths, deleteMonth,
     saveEdit, loadEdits,
     monthDataToPeople, applyEdits,
@@ -155,49 +139,11 @@
   const $ = (id) => document.getElementById(id);
   const state = {
     records: [], year: null, month: null,
-    master: [], masterMeta: null,
     months: [], edits: {}, detailIdx: null,
   };
 
   // ---- 初期化 ----
-  await initMaster();
   await refreshMonthsList();
-
-  async function initMaster() {
-    try {
-      const m = await loadMaster();
-      state.master = m.entries || [];
-      state.masterMeta = { updated_at: m.updated_at, updated_by: m.updated_by };
-      paintMasterStatus();
-    } catch (e) { console.error(e); }
-  }
-  function paintMasterStatus() {
-    const st = $('masterStatus'), clr = $('clearMasterBtn');
-    if (state.master.length) {
-      const when = state.masterMeta?.updated_at ? new Date(state.masterMeta.updated_at).toLocaleDateString() : '';
-      st.textContent = `✓ マスタ登録済み（${state.master.length}名${when ? ' / 更新:' + when : ''}） 全デバイス同期`;
-      st.classList.remove('text-gray-500'); st.classList.add('text-green-700');
-      clr.classList.remove('hidden');
-    } else {
-      st.textContent = '未読み込み（アップすると他デバイスでも共有されます）';
-      st.classList.remove('text-green-700'); st.classList.add('text-gray-500');
-      clr.classList.add('hidden');
-    }
-  }
-  $('masterInput').addEventListener('change', async e => {
-    const f = e.target.files[0]; if (!f) return;
-    try {
-      const entries = parseMasterWorkbook(await f.arrayBuffer());
-      await saveMaster(entries, me.id);
-      await initMaster(); flash(`マスタを更新 (${entries.length}名)`);
-      if (state.year) await reparseCurrent();
-    } catch (err) { showErr('マスタ読込エラー: ' + err.message); }
-  });
-  $('clearMasterBtn').addEventListener('click', async () => {
-    if (!confirm('マスタをクリアします。全デバイスに反映されます。OK?')) return;
-    await clearMaster(); await initMaster(); flash('マスタをクリアしました');
-    if (state.year) await reparseCurrent();
-  });
 
   async function refreshMonthsList() {
     const months = await listMonths();
@@ -250,7 +196,7 @@
     $('fileStatus').textContent = `読み込み中: ${file.name}`;
     try {
       const buf = await file.arrayBuffer();
-      const { records, year, month } = parseTimecardWorkbook(buf, { master: state.master, filename: file.name });
+      const { records, year, month } = parseTimecardWorkbook(buf, { filename: file.name });
       state.records = records; state.year = year; state.month = month;
       state.edits = {};
       const existing = await loadMonth(year, month);
@@ -277,7 +223,6 @@
     $('ymLabel').textContent = `${state.year}年${state.month}月`;
     $('countLabel').textContent = `(${state.records.length}名)`;
     const body = $('summaryBody'); body.innerHTML = '';
-    const unmatched = [];
     state.records.forEach((r, idx) => {
       const tr = document.createElement('tr');
       const alertText = r.monthAlerts.length ? r.monthAlerts.join('／') : '';
@@ -290,13 +235,10 @@
       if (anyIncomplete) flags.push('打刻漏れ');
       if (anyEdit) flags.push('編集あり');
       tr.className = flags.length ? 'alert-row' : '';
-      if (state.master.length && !r.fullName && r.totals.workH > 0) unmatched.push(r.name);
-      const disp = r.fullName ? `${escapeHtml(r.fullName)}<span class="text-gray-400 text-[10px]"> (${escapeHtml(r.name)})</span>` : escapeHtml(r.name);
       tr.innerHTML = `
         <td class="left">${r.id}</td>
-        <td class="left">${disp}</td>
-        <td class="left">${escapeHtml(r.store || '-')}</td>
-        <td class="left">${escapeHtml([r.dept, r.grade].filter(Boolean).join(' / '))}</td>
+        <td class="left">${escapeHtml(r.name)}</td>
+        <td class="left">${escapeHtml(r.dept || '-')}</td>
         <td>${r.totals.workH}</td>
         <td>${r.totals.overtimeH}</td>
         <td>${r.totals.nightH}</td>
@@ -306,18 +248,13 @@
       body.appendChild(tr);
     });
     body.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', () => renderDetail(+b.dataset.idx)));
-    const ub = $('unmatchedBox');
-    if (state.master.length && unmatched.length) {
-      ub.classList.remove('hidden');
-      ub.innerHTML = `⚠ マスタに見つからない人（${unmatched.length}名）：${unmatched.map(escapeHtml).join('、')}`;
-    } else ub.classList.add('hidden');
   }
 
   function renderDetail(idx) {
     const r = state.records[idx]; state.detailIdx = idx;
     $('summarySection').classList.add('hidden');
     $('detailSection').classList.remove('hidden');
-    const disp = r.fullName ? `${r.fullName}（${r.dept || '-'} / ${r.store || '-'}${r.grade ? ' ' + r.grade : ''}）` : `${r.name}（${r.dept || '-'}）`;
+    const disp = `${r.name}（${r.dept || '-'}）`;
     $('personLabel').textContent = `${disp} ${r.year}/${String(r.month).padStart(2, '0')}`;
     $('personAlerts').innerHTML = r.monthAlerts.length
       ? `<div class="text-red-700 bg-red-50 border border-red-200 rounded p-2">⚠ ${r.monthAlerts.map(escapeHtml).join('<br>')}</div>` : '';
