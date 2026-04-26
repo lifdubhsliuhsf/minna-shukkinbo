@@ -1,1 +1,15 @@
 body { -webkit-tap-highlight-color: transparent; }
+
+/* 共通の打刻ボタン（punch画面） */
+.btn-punch {
+  border-radius: 16px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: transform 0.05s ease, opacity 0.15s ease, background 0.15s ease;
+}
+.btn-punch:active:not(:disabled) { transform: scale(0.98); }
+.btn-punch:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-in  { background: #16a34a; color: #fff; }
+.btn-in:hover:not(:disabled)  { background: #15803d; }
+.btn-out { background: #dc2626; color: #fff; }
+.btn-out:hover:not(:disabled) { background: #b91c1c; }

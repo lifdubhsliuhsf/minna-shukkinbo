@@ -1,12 +1,18 @@
 {
   "hosting": {
     "public": "public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "seed/**"],
     "cleanUrls": true,
     "trailingSlash": false,
     "rewrites": [
       { "source": "/login", "destination": "/login.html" },
       { "source": "/register", "destination": "/register.html" },
+      { "source": "/settings", "destination": "/settings.html" },
+      { "source": "/punch", "destination": "/punch.html" },
+      { "source": "/today", "destination": "/today.html" },
+      { "source": "/period", "destination": "/period.html" },
+      { "source": "/admin", "destination": "/admin.html" },
+      { "source": "/employees", "destination": "/employees.html" },
       { "source": "/attendance", "destination": "/attendance.html" }
     ],
     "headers": [
@@ -20,10 +26,23 @@
       {
         "source": "/manifest.webmanifest",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "**",
+        "headers": [
+          { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+        ]
       }
     ]
   },
   "database": {
     "rules": "database.rules.json"
+  },
+  "emulators": {
+    "hosting":  { "port": 5050 },
+    "database": { "port": 9000 },
+    "auth":     { "port": 9099 },
+    "ui":       { "enabled": true, "port": 4000 },
+    "singleProjectMode": true
   }
 }

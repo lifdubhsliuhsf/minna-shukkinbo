@@ -1,0 +1,688 @@
+{
+  "E001": {
+    "name": "上野",
+    "dept": "代表",
+    "workNo": 1,
+    "empNo": "22",
+    "active": true
+  },
+  "E002": {
+    "name": "谷川",
+    "dept": "店長",
+    "workNo": 2,
+    "empNo": "74",
+    "active": true
+  },
+  "E003": {
+    "name": "天重",
+    "dept": "副店長",
+    "workNo": 3,
+    "empNo": "94",
+    "active": true
+  },
+  "E004": {
+    "name": "山根",
+    "dept": "次長",
+    "workNo": 4,
+    "empNo": "111",
+    "active": true
+  },
+  "E005": {
+    "name": "弓田",
+    "dept": "課長",
+    "workNo": 5,
+    "empNo": "131",
+    "active": true
+  },
+  "E007": {
+    "name": "長谷川",
+    "dept": "社員",
+    "workNo": 7,
+    "empNo": "108",
+    "active": true
+  },
+  "E008": {
+    "name": "慶和",
+    "dept": "アルバイト",
+    "workNo": 8,
+    "empNo": "",
+    "active": true
+  },
+  "E009": {
+    "name": "阿部",
+    "dept": "社員",
+    "workNo": 9,
+    "empNo": "89",
+    "active": true
+  },
+  "E010": {
+    "name": "神村",
+    "dept": "部長",
+    "workNo": 10,
+    "empNo": "88",
+    "active": true
+  },
+  "E011": {
+    "name": "兼光",
+    "dept": "ホールリーダー",
+    "workNo": 11,
+    "empNo": "84",
+    "active": true
+  },
+  "E012": {
+    "name": "霜山",
+    "dept": "ホールリーダー",
+    "workNo": 12,
+    "empNo": "117",
+    "active": true
+  },
+  "E013": {
+    "name": "川本",
+    "dept": "ホールリーダー",
+    "workNo": 13,
+    "empNo": "122",
+    "active": true
+  },
+  "E014": {
+    "name": "安田",
+    "dept": "ウェイター",
+    "workNo": 14,
+    "empNo": "128",
+    "active": true
+  },
+  "E015": {
+    "name": "中島",
+    "dept": "ウェイター",
+    "workNo": 15,
+    "empNo": "133",
+    "active": true
+  },
+  "E016": {
+    "name": "中山",
+    "dept": "厨房",
+    "workNo": 16,
+    "empNo": "119",
+    "active": true
+  },
+  "E017": {
+    "name": "泉尾",
+    "dept": "厨房",
+    "workNo": 17,
+    "empNo": "",
+    "active": true
+  },
+  "E018": {
+    "name": "ひかり",
+    "dept": "キャスト",
+    "workNo": 18,
+    "empNo": "452",
+    "active": true
+  },
+  "E019": {
+    "name": "ゆい",
+    "dept": "キャスト",
+    "workNo": 19,
+    "empNo": "920",
+    "active": true
+  },
+  "E020": {
+    "name": "れいな",
+    "dept": "キャスト",
+    "workNo": 20,
+    "empNo": "936",
+    "active": true
+  },
+  "E021": {
+    "name": "ゆずは",
+    "dept": "キャスト",
+    "workNo": 21,
+    "empNo": "404",
+    "active": true
+  },
+  "E022": {
+    "name": "みお",
+    "dept": "キャスト",
+    "workNo": 22,
+    "empNo": "1022",
+    "active": true
+  },
+  "E023": {
+    "name": "ゆき",
+    "dept": "キャスト",
+    "workNo": 23,
+    "empNo": "606",
+    "active": true
+  },
+  "E024": {
+    "name": "しおり",
+    "dept": "キャスト",
+    "workNo": 24,
+    "empNo": "395",
+    "active": true
+  },
+  "E025": {
+    "name": "りょう",
+    "dept": "キャスト",
+    "workNo": 25,
+    "empNo": "395",
+    "active": true
+  },
+  "E026": {
+    "name": "りか",
+    "dept": "キャスト",
+    "workNo": 26,
+    "empNo": "314",
+    "active": true
+  },
+  "E027": {
+    "name": "きらり",
+    "dept": "キャスト",
+    "workNo": 27,
+    "empNo": "981",
+    "active": true
+  },
+  "E028": {
+    "name": "なこ",
+    "dept": "キャスト",
+    "workNo": 28,
+    "empNo": "965",
+    "active": true
+  },
+  "E029": {
+    "name": "みゆう",
+    "dept": "キャスト",
+    "workNo": 29,
+    "empNo": "938",
+    "active": true
+  },
+  "E030": {
+    "name": "いろは",
+    "dept": "キャスト",
+    "workNo": 30,
+    "empNo": "1043",
+    "active": true
+  },
+  "E031": {
+    "name": "さや",
+    "dept": "キャスト",
+    "workNo": 31,
+    "empNo": "1049",
+    "active": true
+  },
+  "E032": {
+    "name": "えま",
+    "dept": "キャスト",
+    "workNo": 32,
+    "empNo": "",
+    "active": true
+  },
+  "E033": {
+    "name": "のん",
+    "dept": "キャスト",
+    "workNo": 33,
+    "empNo": "1055",
+    "active": true
+  },
+  "E034": {
+    "name": "なみ",
+    "dept": "キャスト",
+    "workNo": 34,
+    "empNo": "",
+    "active": true
+  },
+  "E035": {
+    "name": "みく",
+    "dept": "キャスト",
+    "workNo": 35,
+    "empNo": "954",
+    "active": true
+  },
+  "E036": {
+    "name": "りさ",
+    "dept": "キャスト",
+    "workNo": 36,
+    "empNo": "388",
+    "active": true
+  },
+  "E037": {
+    "name": "きこ",
+    "dept": "キャスト",
+    "workNo": 37,
+    "empNo": "1011",
+    "active": true
+  },
+  "E038": {
+    "name": "りん",
+    "dept": "キャスト",
+    "workNo": 38,
+    "empNo": "1010",
+    "active": true
+  },
+  "E039": {
+    "name": "なる",
+    "dept": "キャスト",
+    "workNo": 39,
+    "empNo": "276",
+    "active": true
+  },
+  "E040": {
+    "name": "まりな",
+    "dept": "キャスト",
+    "workNo": 40,
+    "empNo": "116",
+    "active": true
+  },
+  "E041": {
+    "name": "いちご",
+    "dept": "キャスト",
+    "workNo": 41,
+    "empNo": "563",
+    "active": true
+  },
+  "E042": {
+    "name": "ゆな",
+    "dept": "キャスト",
+    "workNo": 42,
+    "empNo": "1021",
+    "active": true
+  },
+  "E043": {
+    "name": "ひめ",
+    "dept": "キャスト",
+    "workNo": 43,
+    "empNo": "982",
+    "active": true
+  },
+  "E044": {
+    "name": "ゆうり",
+    "dept": "キャスト",
+    "workNo": 44,
+    "empNo": "953",
+    "active": true
+  },
+  "E045": {
+    "name": "松本",
+    "dept": "課長",
+    "workNo": 45,
+    "empNo": "135",
+    "active": true
+  },
+  "E046": {
+    "name": "藤田",
+    "dept": "専務",
+    "workNo": 46,
+    "empNo": "",
+    "active": true
+  },
+  "E047": {
+    "name": "りお",
+    "dept": "キャスト",
+    "workNo": 47,
+    "empNo": "1069",
+    "active": true
+  },
+  "E048": {
+    "name": "かのん",
+    "dept": "キャスト",
+    "workNo": 48,
+    "empNo": "1068",
+    "active": true
+  },
+  "E049": {
+    "name": "せいら",
+    "dept": "キャスト",
+    "workNo": 49,
+    "empNo": "1073",
+    "active": true
+  },
+  "E050": {
+    "name": "まい",
+    "dept": "キャスト",
+    "workNo": 50,
+    "empNo": "561",
+    "active": true
+  },
+  "E051": {
+    "name": "ももか",
+    "dept": "キャスト",
+    "workNo": 51,
+    "empNo": "1074",
+    "active": true
+  },
+  "E052": {
+    "name": "ゆり",
+    "dept": "キャスト",
+    "workNo": 52,
+    "empNo": "1076",
+    "active": true
+  },
+  "E053": {
+    "name": "照屋",
+    "dept": "ウェイター",
+    "workNo": 53,
+    "empNo": "",
+    "active": true
+  },
+  "E054": {
+    "name": "さくら",
+    "dept": "キャスト",
+    "workNo": 54,
+    "empNo": "1084",
+    "active": true
+  },
+  "E055": {
+    "name": "はな",
+    "dept": "キャスト",
+    "workNo": 55,
+    "empNo": "1085",
+    "active": true
+  },
+  "E056": {
+    "name": "なぎさ",
+    "dept": "キャスト",
+    "workNo": 56,
+    "empNo": "1092",
+    "active": true
+  },
+  "E057": {
+    "name": "なつ",
+    "dept": "キャスト",
+    "workNo": 57,
+    "empNo": "1093",
+    "active": true
+  },
+  "E058": {
+    "name": "らむ",
+    "dept": "キャスト",
+    "workNo": 58,
+    "empNo": "1101",
+    "active": true
+  },
+  "E059": {
+    "name": "あいり",
+    "dept": "キャスト",
+    "workNo": 59,
+    "empNo": "1110",
+    "active": true
+  },
+  "E060": {
+    "name": "高本",
+    "dept": "ウェイター",
+    "workNo": 60,
+    "empNo": "137",
+    "active": true
+  },
+  "E061": {
+    "name": "あつこ",
+    "dept": "キャスト",
+    "workNo": 61,
+    "empNo": "",
+    "active": true
+  },
+  "E062": {
+    "name": "宮武138",
+    "dept": "ウェイター",
+    "workNo": 62,
+    "empNo": "",
+    "active": true
+  },
+  "E063": {
+    "name": "金子103",
+    "dept": "副店長",
+    "workNo": 63,
+    "empNo": "",
+    "active": true
+  },
+  "E064": {
+    "name": "らんこ",
+    "dept": "キャスト",
+    "workNo": 64,
+    "empNo": "",
+    "active": true
+  },
+  "E065": {
+    "name": "あみ",
+    "dept": "キャスト",
+    "workNo": 65,
+    "empNo": "",
+    "active": true
+  },
+  "E066": {
+    "name": "なぎ",
+    "dept": "キャスト",
+    "workNo": 66,
+    "empNo": "1130",
+    "active": true
+  },
+  "E068": {
+    "name": "内藤",
+    "dept": "研修",
+    "workNo": 68,
+    "empNo": "139",
+    "active": true
+  },
+  "E067": {
+    "name": "みそら",
+    "dept": "キャスト",
+    "workNo": 67,
+    "empNo": "1135",
+    "active": true
+  },
+  "E069": {
+    "name": "なな",
+    "dept": "キャスト",
+    "workNo": 69,
+    "empNo": "284",
+    "active": true
+  },
+  "E070": {
+    "name": "そら",
+    "dept": "キャスト",
+    "workNo": 70,
+    "empNo": "1143",
+    "active": true
+  },
+  "E071": {
+    "name": "つき",
+    "dept": "キャスト",
+    "workNo": 71,
+    "empNo": "1142",
+    "active": true
+  },
+  "E072": {
+    "name": "せな",
+    "dept": "キャスト",
+    "workNo": 72,
+    "empNo": "1145",
+    "active": true
+  },
+  "E073": {
+    "name": "和田",
+    "dept": "アルバイト",
+    "workNo": 73,
+    "empNo": "",
+    "active": true
+  },
+  "E074": {
+    "name": "みさ",
+    "dept": "キャスト",
+    "workNo": 74,
+    "empNo": "1153",
+    "active": true
+  },
+  "E075": {
+    "name": "れみ",
+    "dept": "キャスト",
+    "workNo": 75,
+    "empNo": "1157",
+    "active": true
+  },
+  "E076": {
+    "name": "かれん",
+    "dept": "キャスト",
+    "workNo": 76,
+    "empNo": "1160",
+    "active": true
+  },
+  "E077": {
+    "name": "みな",
+    "dept": "キャスト",
+    "workNo": 77,
+    "empNo": "",
+    "active": true
+  },
+  "E078": {
+    "name": "のあ",
+    "dept": "Cast",
+    "workNo": 78,
+    "empNo": "",
+    "active": true
+  },
+  "E079": {
+    "name": "なな",
+    "dept": "Cast",
+    "workNo": 79,
+    "empNo": "284",
+    "active": true
+  },
+  "E080": {
+    "name": "西森",
+    "dept": "厨房",
+    "workNo": 80,
+    "empNo": "",
+    "active": true
+  },
+  "E081": {
+    "name": "せら",
+    "dept": "Cast",
+    "workNo": 81,
+    "empNo": "",
+    "active": true
+  },
+  "E082": {
+    "name": "りり",
+    "dept": "Cast",
+    "workNo": 82,
+    "empNo": "",
+    "active": true
+  },
+  "E083": {
+    "name": "りあ",
+    "dept": "Cast",
+    "workNo": 83,
+    "empNo": "",
+    "active": true
+  },
+  "E084": {
+    "name": "ゆら",
+    "dept": "Cast",
+    "workNo": 84,
+    "empNo": "",
+    "active": true
+  },
+  "E085": {
+    "name": "あすか",
+    "dept": "Cast",
+    "workNo": 85,
+    "empNo": "",
+    "active": true
+  },
+  "E086": {
+    "name": "ももね",
+    "dept": "Cast",
+    "workNo": 86,
+    "empNo": "",
+    "active": true
+  },
+  "E087": {
+    "name": "せいか",
+    "dept": "Cast",
+    "workNo": 87,
+    "empNo": "",
+    "active": true
+  },
+  "E088": {
+    "name": "れな",
+    "dept": "Cast",
+    "workNo": 88,
+    "empNo": "",
+    "active": true
+  },
+  "E089": {
+    "name": "阿武",
+    "dept": "アルバイト",
+    "workNo": 89,
+    "empNo": "",
+    "active": true
+  },
+  "E090": {
+    "name": "ゆあ",
+    "dept": "Cast",
+    "workNo": 90,
+    "empNo": "",
+    "active": true
+  },
+  "E091": {
+    "name": "あかり",
+    "dept": "Cast",
+    "workNo": 91,
+    "empNo": "",
+    "active": true
+  },
+  "E092": {
+    "name": "もえ",
+    "dept": "Cast",
+    "workNo": 92,
+    "empNo": "",
+    "active": true
+  },
+  "E093": {
+    "name": "Mika",
+    "dept": "Cast",
+    "workNo": 93,
+    "empNo": "",
+    "active": true
+  },
+  "E094": {
+    "name": "Anna",
+    "dept": "Cast",
+    "workNo": 94,
+    "empNo": "",
+    "active": true
+  },
+  "E095": {
+    "name": "Hiyori",
+    "dept": "Cast",
+    "workNo": 95,
+    "empNo": "",
+    "active": true
+  },
+  "E096": {
+    "name": "Yua",
+    "dept": "Cast",
+    "workNo": 96,
+    "empNo": "",
+    "active": true
+  },
+  "E097": {
+    "name": "Tanaka",
+    "dept": "アルバイト",
+    "workNo": 97,
+    "empNo": "",
+    "active": true
+  },
+  "E098": {
+    "name": "Suzu",
+    "dept": "Cast",
+    "workNo": 98,
+    "empNo": "",
+    "active": true
+  },
+  "E099": {
+    "name": "Misakl",
+    "dept": "Cast",
+    "workNo": 99,
+    "empNo": "",
+    "active": true
+  }
+}

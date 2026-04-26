@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex, nofollow">
   <title>新規登録 - みんなの出勤簿</title>
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#1a1a1a">
@@ -35,15 +36,26 @@
     </div>
     <button id="submitBtn" class="w-full bg-black text-white py-2 rounded font-bold disabled:bg-gray-400 disabled:cursor-not-allowed">登録</button>
     <div id="err" class="text-red-600 text-sm hidden"></div>
+    <div class="text-[11px] text-gray-500">※ 最初に登録した人が <b>office</b>(管理者) になります。それ以降は <b>staff</b> 権限で登録され、office が後から昇格できます。</div>
   </form>
   <div class="text-center mt-4">
     <a href="/login" class="text-sm text-gray-500 underline">ログインに戻る</a>
   </div>
 </div>
 <script type="module">
-  import { auth, db, createUserWithEmailAndPassword, updateProfile, ref, set, serverTimestamp } from '/js/firebase-init.js';
+  import {
+    auth, db, createUserWithEmailAndPassword, updateProfile,
+    ref, set, serverTimestamp, runTransaction
+  } from '/js/firebase-init.js';
   import { redirectIfAuthed } from '/js/auth-guard.js';
-  redirectIfAuthed('/attendance');
+  redirectIfAuthed('/punch');
+
+  async function maybeAssignFirstOffice(uid) {
+    const flagRef = ref(db, 'meta/firstOfficeUid');
+    const tx = await runTransaction(flagRef, (cur) => cur ? undefined : uid);
+    return tx.committed && tx.snapshot.val() === uid;
+  }
+
   const form = document.getElementById('registerForm');
   const err = document.getElementById('err');
   const submitBtn = document.getElementById('submitBtn');
@@ -61,12 +73,15 @@
       const email = fd.get('email').trim();
       const cred = await createUserWithEmailAndPassword(auth, email, fd.get('password'));
       await updateProfile(cred.user, { displayName: name });
-      await set(ref(db, `att_users/${cred.user.uid}`), {
-        name, email,
+      let role = 'staff';
+      try { if (await maybeAssignFirstOffice(cred.user.uid)) role = 'office'; } catch (_) {}
+      await set(ref(db, `users/${cred.user.uid}`), {
+        name, email, role,
+        color_index: Math.floor(Math.random() * 7),
         created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
+        updated_at: serverTimestamp()
       });
-      location.href = '/attendance';
+      location.href = '/punch';
     } catch (ex) {
       window.__suppressAuthRedirect = false;
       submitBtn.disabled = false; submitBtn.textContent = '登録';

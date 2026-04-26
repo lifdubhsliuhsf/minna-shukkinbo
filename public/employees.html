@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>社員マスタ - みんなの出勤簿</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen pb-20">
+<div id="app" class="max-w-3xl mx-auto"></div>
+
+<script type="module">
+  import { db, ref, onValue, set, update, remove, push, escapeHtml } from '/js/firebase-init.js';
+  import { requireRole } from '/js/auth-guard.js';
+  import { renderHeader, renderBottomNav, showFlash } from '/js/layout.js';
+
+  const me = await requireRole(['office']);
+  if (!me) throw new Error('blocked');
+
+  document.getElementById('app').innerHTML = `
+    ${renderHeader('👥 社員マスタ')}
+    <main class="px-3 py-3 space-y-4">
+      <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
+        <div class="text-sm font-bold text-gray-700">新規追加</div>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 items-end">
+          <div><label class="block text-xs text-gray-500 mb-1">No.</label>
+            <input id="newWorkNo" type="number" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" placeholder="100"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">氏名*</label>
+            <input id="newName" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" placeholder="山田 太郎"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">部門</label>
+            <input id="newDept" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" placeholder="ホール"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">社員番号</label>
+            <input id="newEmpNo" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm" placeholder="任意"></div>
+          <button id="addBtn" class="bg-gray-900 text-white py-1.5 rounded text-sm font-bold">追加</button>
+        </div>
+      </section>
+
+      <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="text-sm font-bold text-gray-700">社員一覧</div>
+          <span id="counter" class="text-xs text-gray-500">—</span>
+        </div>
+        <div class="overflow-auto" style="max-height: 70vh;">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-xs text-gray-500">
+              <tr>
+                <th class="text-left p-2">No</th>
+                <th class="text-left p-2">氏名</th>
+                <th class="text-left p-2">部門</th>
+                <th class="text-left p-2">社員番号</th>
+                <th class="text-center p-2">在籍</th>
+                <th class="text-center p-2">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    ${renderBottomNav('/employees', me.role)}
+  `;
+
+  let employees = {};
+  onValue(ref(db, 'employees'), (snap) => {
+    employees = snap.val() || {};
+    render();
+  });
+
+  function render() {
+    const arr = Object.entries(employees).map(([id, v]) => ({ id, ...v }))
+      .sort((a, b) => (a.workNo || 0) - (b.workNo || 0));
+    document.getElementById('counter').textContent = `${arr.length} 名 (在籍 ${arr.filter(e => e.active !== false).length} 名)`;
+    const tb = document.getElementById('tbody');
+    tb.innerHTML = arr.map(e => `
+      <tr class="border-t border-gray-100 ${e.active === false ? 'text-gray-400 italic' : ''}">
+        <td class="p-2 tabular-nums">${e.workNo ?? '—'}</td>
+        <td class="p-2"><input data-edit="${e.id}" data-field="name" value="${escapeHtml(e.name||'')}" class="w-full border border-transparent hover:border-gray-300 rounded px-1 py-0.5 text-sm"></td>
+        <td class="p-2"><input data-edit="${e.id}" data-field="dept" value="${escapeHtml(e.dept||'')}" class="w-full border border-transparent hover:border-gray-300 rounded px-1 py-0.5 text-sm"></td>
+        <td class="p-2"><input data-edit="${e.id}" data-field="empNo" value="${escapeHtml(e.empNo||'')}" class="w-full border border-transparent hover:border-gray-300 rounded px-1 py-0.5 text-sm"></td>
+        <td class="p-2 text-center"><input type="checkbox" data-toggle="${e.id}" ${e.active !== false ? 'checked' : ''}></td>
+        <td class="p-2 text-center"><button data-del="${e.id}" class="text-xs text-red-600 hover:underline">削除</button></td>
+      </tr>
+    `).join('');
+    tb.querySelectorAll('input[data-edit]').forEach(inp => {
+      inp.addEventListener('change', async () => {
+        const id = inp.dataset.edit, field = inp.dataset.field, val = inp.value.trim();
+        try { await update(ref(db, `employees/${id}`), { [field]: val }); showFlash('保存'); }
+        catch (e) { showFlash('失敗: ' + e.message, 'err'); }
+      });
+    });
+    tb.querySelectorAll('input[data-toggle]').forEach(inp => {
+      inp.addEventListener('change', async () => {
+        const id = inp.dataset.toggle;
+        try { await update(ref(db, `employees/${id}`), { active: inp.checked }); showFlash(inp.checked ? '在籍に' : '退職に'); }
+        catch (e) { showFlash('失敗: ' + e.message, 'err'); inp.checked = !inp.checked; }
+      });
+    });
+    tb.querySelectorAll('button[data-del]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.del, e = employees[id];
+        if (!confirm(`${e.name} (${id}) を完全に削除します。打刻履歴は employees 削除後も残ります。続行?`)) return;
+        try { await remove(ref(db, `employees/${id}`)); showFlash('削除'); }
+        catch (ex) { showFlash('失敗: ' + ex.message, 'err'); }
+      });
+    });
+  }
+
+  document.getElementById('addBtn').addEventListener('click', async () => {
+    const name = document.getElementById('newName').value.trim();
+    const dept = document.getElementById('newDept').value.trim();
+    const workNo = parseInt(document.getElementById('newWorkNo').value, 10) || null;
+    const empNo = document.getElementById('newEmpNo').value.trim();
+    if (!name) { showFlash('氏名は必須', 'err'); return; }
+    // E001 形式の次の連番を生成
+    const ids = Object.keys(employees).filter(k => /^E\d+$/.test(k));
+    const maxN = ids.reduce((acc, k) => Math.max(acc, parseInt(k.slice(1), 10) || 0), 0);
+    const newId = `E${String(maxN + 1).padStart(3, '0')}`;
+    try {
+      await set(ref(db, `employees/${newId}`), { name, dept, workNo, empNo, active: true });
+      ['newName','newDept','newWorkNo','newEmpNo'].forEach(id => document.getElementById(id).value = '');
+      showFlash(`追加: ${newId}`);
+    } catch (e) { showFlash('失敗: ' + e.message, 'err'); }
+  });
+</script>
+</body>
+</html>

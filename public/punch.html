@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>打刻 - みんなの出勤簿</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .kiosk-clock {
+      font-size: clamp(72px, 14vw, 180px);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .kiosk-date { font-size: clamp(18px, 2.5vw, 32px); }
+    .kiosk-btn { min-height: 130px; font-size: clamp(24px, 4vw, 38px); }
+    .top-table { font-size: 13px; }
+    .top-table th, .top-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      white-space: nowrap;
+    }
+    .top-table thead th {
+      position: sticky; top: 0; background: #f8fafc; z-index: 1;
+      font-size: 11px; font-weight: 600; color: #64748b;
+    }
+    .pill-in  { background:#dcfce7; color:#14532d; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+    .pill-out { background:#fee2e2; color:#7f1d1d; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+    .pill-no  { background:#f1f5f9; color:#64748b; padding:2px 8px; border-radius:999px; font-size:11px; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen pb-20">
+<div id="app" class="max-w-3xl mx-auto"></div>
+
+<script type="module">
+  import {
+    db, ref, push, onValue, query, orderByChild, equalTo, serverTimestamp,
+    dateKeyJST, periodKeyFromDate, fmtHHmm, fmtHHmmss, escapeHtml
+  } from '/js/firebase-init.js';
+  import { requireAuth, logout } from '/js/auth-guard.js';
+  import { renderHeader, renderBottomNav, showFlash } from '/js/layout.js';
+
+  const me = await requireAuth();
+
+  document.getElementById('app').innerHTML = `
+    ${renderHeader('⏰ 打刻', {
+      right: `
+        <span class="text-xs text-gray-500">${escapeHtml(me.name)}</span>
+        <button id="csvBtn" class="px-2 py-1 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700">⇩ 本日CSV</button>
+      `
+    })}
+    <section class="px-4 pt-3">
+      <div class="flex items-baseline justify-between mb-2">
+        <h2 class="text-sm font-bold text-gray-700">本日の打刻状況 <span id="todayLabel" class="text-gray-400 font-normal ml-2"></span></h2>
+        <div id="activitySummary" class="text-xs text-gray-500"></div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 overflow-auto" style="max-height: 240px;">
+        <table class="top-table w-full">
+          <thead>
+            <tr>
+              <th class="text-left">氏名</th>
+              <th class="text-left">部門</th>
+              <th class="text-center">出勤</th>
+              <th class="text-center">退勤</th>
+              <th class="text-center">実働(簡易)</th>
+              <th class="text-center">状態</th>
+            </tr>
+          </thead>
+          <tbody id="todayTable">
+            <tr><td colspan="6" class="text-center text-gray-400 py-6">読み込み中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="px-4 mt-6 flex flex-col items-center">
+      <div class="kiosk-clock text-gray-900" id="clock">--:--:--</div>
+      <div class="kiosk-date text-gray-500 mt-1" id="date">----/--/-- (-)</div>
+      <div class="w-full max-w-2xl mt-6">
+        <label class="block text-sm font-bold text-gray-600 mb-2">氏名を選択</label>
+        <select id="employeeSelect" class="w-full p-4 text-2xl border-2 border-gray-200 rounded-xl bg-white appearance-none">
+          <option value="">読み込み中…</option>
+        </select>
+        <div id="statusCard" class="hidden mt-3 bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs text-gray-500 mb-1">現在の状態</div>
+          <div id="statusValue" class="text-xl font-bold">-</div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-4">
+          <button id="btnIn"  class="btn-punch kiosk-btn btn-in"  disabled>出 勤</button>
+          <button id="btnOut" class="btn-punch kiosk-btn btn-out" disabled>退 勤</button>
+        </div>
+        <div id="logs" class="bg-white rounded-xl border border-gray-200 p-4 text-sm mt-4">
+          <div class="text-gray-400 text-center py-2">氏名を選ぶと本日の打刻履歴が表示されます</div>
+        </div>
+      </div>
+    </section>
+    ${renderBottomNav('/punch', me.role)}
+  `;
+
+  // 時計
+  const pad = n => String(n).padStart(2, '0');
+  function updateClock() {
+    const d = new Date();
+    document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    const w = ['日','月','火','水','木','金','土'][d.getDay()];
+    document.getElementById('date').textContent = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} (${w})`;
+  }
+  updateClock(); setInterval(updateClock, 1000);
+
+  const today = dateKeyJST();
+  document.getElementById('todayLabel').textContent = today;
+
+  // 従業員マスタ取得
+  const selectEl = document.getElementById('employeeSelect');
+  let allEmployees = [];
+  onValue(ref(db, 'employees'), (snap) => {
+    const data = snap.val() || {};
+    allEmployees = Object.entries(data).map(([id, v]) => ({ id, ...v }))
+      .filter(e => e.active !== false && e.name)
+      .sort((a, b) => (a.workNo || 0) - (b.workNo || 0));
+    const saved = localStorage.getItem('tc_last_emp') || '';
+    selectEl.innerHTML = '<option value="">選択してください</option>' +
+      allEmployees.map(e => `<option value="${e.id}" ${saved === e.id ? 'selected' : ''}>${escapeHtml(e.name)}（${escapeHtml(e.dept || '')}）</option>`).join('');
+    if (saved) renderSelectedLogs();
+    renderTopTable();
+  });
+
+  selectEl.addEventListener('change', () => {
+    const id = selectEl.value;
+    if (id) localStorage.setItem('tc_last_emp', id);
+    renderSelectedLogs();
+  });
+
+  // 本日の全打刻
+  let todayAllPunches = [];
+  const qToday = query(ref(db, 'punches'), orderByChild('dateKey'), equalTo(today));
+  onValue(qToday, (snap) => {
+    const arr = [];
+    snap.forEach(c => { arr.push({ id: c.key, ...c.val() }); return false; });
+    todayAllPunches = arr;
+    renderTopTable();
+    renderSelectedLogs();
+  });
+
+  function renderTopTable() {
+    const byEmp = {};
+    for (const p of todayAllPunches) {
+      if (!byEmp[p.employeeId]) byEmp[p.employeeId] = { ins: [], outs: [] };
+      (p.type === 'in' ? byEmp[p.employeeId].ins : byEmp[p.employeeId].outs).push(p);
+    }
+    const rows = allEmployees.map(emp => {
+      const cell = byEmp[emp.id] || { ins: [], outs: [] };
+      const firstIn = cell.ins.length ? Math.min(...cell.ins.map(p => p.timestamp)) : null;
+      const lastOut = cell.outs.length ? Math.max(...cell.outs.map(p => p.timestamp)) : null;
+      let hrs = '', state;
+      if (firstIn && lastOut) {
+        const h = (lastOut - firstIn) / 3600000 - 1;
+        hrs = h > 0 ? h.toFixed(1) + 'h' : '0.0h';
+        state = `<span class="pill-out">退勤済</span>`;
+      } else if (firstIn) state = `<span class="pill-in">勤務中</span>`;
+      else state = `<span class="pill-no">未出勤</span>`;
+      return { emp, firstIn, lastOut, hrs, state, punched: !!(firstIn || lastOut) };
+    });
+    rows.sort((a, b) => (b.punched ? 1 : 0) - (a.punched ? 1 : 0));
+    const activeCount = rows.filter(r => r.firstIn && !r.lastOut).length;
+    const doneCount = rows.filter(r => r.firstIn && r.lastOut).length;
+    document.getElementById('activitySummary').textContent =
+      `勤務中 ${activeCount} / 退勤済 ${doneCount} / 全${rows.length}名`;
+    const tbody = document.getElementById('todayTable');
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-6">従業員マスタが空です（office で /employees から登録）</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr class="${r.punched ? '' : 'text-gray-400'}">
+        <td class="font-medium">${escapeHtml(r.emp.name)}</td>
+        <td class="text-xs">${escapeHtml(r.emp.dept || '')}</td>
+        <td class="text-center tabular-nums ${r.firstIn ? 'text-green-700 font-bold' : ''}">${r.firstIn ? fmtHHmm(r.firstIn) : '—'}</td>
+        <td class="text-center tabular-nums ${r.lastOut ? 'text-red-700 font-bold' : ''}">${r.lastOut ? fmtHHmm(r.lastOut) : '—'}</td>
+        <td class="text-center tabular-nums">${r.hrs || '—'}</td>
+        <td class="text-center">${r.state}</td>
+      </tr>
+    `).join('');
+  }
+
+  // 選択中社員の状態 & 履歴
+  let selectedTodayLogs = [];
+  function renderSelectedLogs() {
+    const empId = selectEl.value;
+    const logsEl = document.getElementById('logs');
+    if (!empId) {
+      logsEl.innerHTML = '<div class="text-gray-400 text-center py-2">氏名を選ぶと本日の打刻履歴が表示されます</div>';
+      document.getElementById('statusCard').classList.add('hidden');
+      setButtons(null); return;
+    }
+    selectedTodayLogs = todayAllPunches.filter(p => p.employeeId === empId).sort((a, b) => a.timestamp - b.timestamp);
+    renderStatus(); renderLogs();
+  }
+
+  function renderStatus() {
+    const card = document.getElementById('statusCard');
+    const val = document.getElementById('statusValue');
+    card.classList.remove('hidden');
+    const last = selectedTodayLogs[selectedTodayLogs.length - 1];
+    let status = 'none';
+    if (last) status = last.type === 'in' ? 'working' : 'done';
+    const map = {
+      none:    { text: '未出勤',   cls: 'text-gray-600' },
+      working: { text: '勤務中',   cls: 'text-green-600' },
+      done:    { text: '退勤済み', cls: 'text-gray-500' }
+    };
+    val.textContent = map[status].text;
+    val.className = `text-xl font-bold ${map[status].cls}`;
+    setButtons(status);
+  }
+
+  function setButtons(status) {
+    const btnIn = document.getElementById('btnIn');
+    const btnOut = document.getElementById('btnOut');
+    btnIn.disabled = btnOut.disabled = true;
+    if (status === 'none')    btnIn.disabled = false;
+    if (status === 'working') btnOut.disabled = false;
+  }
+
+  function renderLogs() {
+    const logsEl = document.getElementById('logs');
+    if (selectedTodayLogs.length === 0) {
+      logsEl.innerHTML = '<div class="text-gray-400 text-center py-2">本日の打刻はまだありません</div>';
+      return;
+    }
+    logsEl.innerHTML = `
+      <div class="text-xs font-bold text-gray-500 mb-2">本日の打刻履歴</div>
+      ${selectedTodayLogs.map(p => `
+        <div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-b-0">
+          <span class="text-xs px-2 py-0.5 rounded ${p.type === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+            ${p.type === 'in' ? '出勤' : '退勤'}
+          </span>
+          <span class="tabular-nums">${fmtHHmmss(p.timestamp)}</span>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  document.getElementById('btnIn').addEventListener('click', () => doPunch('in'));
+  document.getElementById('btnOut').addEventListener('click', () => doPunch('out'));
+
+  async function doPunch(type) {
+    const empId = selectEl.value;
+    if (!empId) { alert('氏名を選択してください'); return; }
+    const emp = allEmployees.find(e => e.id === empId);
+    if (!emp) { alert('社員データが見つかりません'); return; }
+    const label = type === 'in' ? '出勤' : '退勤';
+    if (!confirm(`${emp.name} さん、「${label}」を記録しますか？`)) return;
+    document.querySelectorAll('.btn-punch').forEach(b => b.disabled = true);
+    try {
+      const td = dateKeyJST();
+      await push(ref(db, 'punches'), {
+        employeeId: emp.id,
+        employeeName: emp.name,
+        employeeDept: emp.dept || '',
+        type,
+        timestamp: serverTimestamp(),
+        dateKey: td,
+        periodKey: periodKeyFromDate(td),
+        deviceUid: me.id,
+        deviceLabel: localStorage.getItem('tc_device_label') || ''
+      });
+      showFlash(`✓ ${emp.name} さんの ${label} を記録しました`);
+    } catch (e) {
+      showFlash(`エラー: ${e.message}`, 'err');
+      renderStatus();
+    }
+  }
+
+  // 本日CSV
+  document.getElementById('csvBtn').addEventListener('click', () => {
+    const rows = [['日付','社員ID','氏名','部門','出勤','退勤','実働(簡易h)','備考']];
+    const byEmp = {};
+    for (const p of todayAllPunches) {
+      if (!byEmp[p.employeeId]) byEmp[p.employeeId] = { ins: [], outs: [] };
+      (p.type === 'in' ? byEmp[p.employeeId].ins : byEmp[p.employeeId].outs).push(p);
+    }
+    for (const emp of allEmployees) {
+      const cell = byEmp[emp.id] || { ins: [], outs: [] };
+      const firstIn = cell.ins.length ? Math.min(...cell.ins.map(p => p.timestamp)) : null;
+      const lastOut = cell.outs.length ? Math.max(...cell.outs.map(p => p.timestamp)) : null;
+      let hrs = '', note = '';
+      if (firstIn && lastOut) {
+        const h = (lastOut - firstIn) / 3600000 - 1;
+        hrs = h > 0 ? h.toFixed(2) : '0.00';
+      } else if (firstIn) note = '退勤打刻なし';
+      else if (lastOut) note = '出勤打刻なし';
+      rows.push([today, emp.id, emp.name, emp.dept || '',
+        firstIn ? fmtHHmm(firstIn) : '', lastOut ? fmtHHmm(lastOut) : '', hrs, note]);
+    }
+    const csv = '﻿' + rows.map(r => r.map(c => {
+      const s = String(c ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    }).join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `timecard_${today}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    showFlash('CSVをダウンロードしました');
+  });
+</script>
+</body>
+</html>

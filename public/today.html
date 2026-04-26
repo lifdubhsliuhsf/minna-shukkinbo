@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>本日一覧 - みんなの出勤簿</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen pb-20">
+<div id="app" class="max-w-3xl mx-auto"></div>
+
+<script type="module">
+  import {
+    db, ref, onValue, query, orderByChild, equalTo,
+    dateKeyJST, fmtHHmm, escapeHtml
+  } from '/js/firebase-init.js';
+  import { requireAuth } from '/js/auth-guard.js';
+  import { renderHeader, renderBottomNav } from '/js/layout.js';
+
+  const me = await requireAuth();
+
+  document.getElementById('app').innerHTML = `
+    ${renderHeader('📋 本日の打刻一覧')}
+    <main class="px-4 py-4">
+      <div class="text-xs text-gray-500 mb-2" id="today"></div>
+      <div id="table" class="bg-white rounded-xl border border-gray-200 overflow-hidden"></div>
+    </main>
+    ${renderBottomNav('/today', me.role)}
+  `;
+
+  const today = dateKeyJST();
+  document.getElementById('today').textContent = today;
+
+  let employees = {};
+  onValue(ref(db, 'employees'), (snap) => { employees = snap.val() || {}; render(); });
+
+  let punches = [];
+  const q = query(ref(db, 'punches'), orderByChild('dateKey'), equalTo(today));
+  onValue(q, (snap) => {
+    const arr = [];
+    snap.forEach(c => { arr.push({ id: c.key, ...c.val() }); return false; });
+    punches = arr; render();
+  });
+
+  function render() {
+    const byEmp = {};
+    for (const p of punches) {
+      if (!byEmp[p.employeeId]) byEmp[p.employeeId] = [];
+      byEmp[p.employeeId].push(p);
+    }
+    const rows = Object.keys(employees)
+      .map(id => ({ id, ...employees[id] }))
+      .filter(e => e.active !== false)
+      .sort((a, b) => (a.workNo || 0) - (b.workNo || 0))
+      .map(emp => {
+        const ps = (byEmp[emp.id] || []).sort((a, b) => a.timestamp - b.timestamp);
+        const firstIn = ps.find(p => p.type === 'in');
+        const lastOut = [...ps].reverse().find(p => p.type === 'out');
+        return { emp, firstIn, lastOut, punchCount: ps.length };
+      });
+
+    const tableEl = document.getElementById('table');
+    if (rows.length === 0) {
+      tableEl.innerHTML = '<div class="p-6 text-center text-gray-400">従業員マスタが空です</div>';
+      return;
+    }
+    tableEl.innerHTML = `
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-xs text-gray-500">
+          <tr>
+            <th class="text-left p-2">No</th>
+            <th class="text-left p-2">氏名</th>
+            <th class="text-left p-2">部門</th>
+            <th class="text-center p-2">出勤</th>
+            <th class="text-center p-2">退勤</th>
+            <th class="text-center p-2">打刻</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr class="border-t border-gray-100 ${r.punchCount === 0 ? 'text-gray-400' : ''}">
+              <td class="p-2 tabular-nums">${r.emp.workNo ?? ''}</td>
+              <td class="p-2 font-medium">${escapeHtml(r.emp.name)}</td>
+              <td class="p-2 text-xs">${escapeHtml(r.emp.dept || '')}</td>
+              <td class="p-2 text-center tabular-nums ${r.firstIn ? 'text-green-700 font-bold' : ''}">${r.firstIn ? fmtHHmm(r.firstIn.timestamp) : '—'}</td>
+              <td class="p-2 text-center tabular-nums ${r.lastOut ? 'text-red-700 font-bold' : ''}">${r.lastOut ? fmtHHmm(r.lastOut.timestamp) : '—'}</td>
+              <td class="p-2 text-center tabular-nums text-xs">${r.punchCount}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+</script>
+</body>
+</html>

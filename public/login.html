@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex, nofollow">
   <title>ログイン - みんなの出勤簿</title>
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#1a1a1a">
@@ -13,7 +14,7 @@
 <body class="bg-gray-50 text-gray-900 min-h-screen">
 <div class="max-w-sm mx-auto pt-16 px-4">
   <h1 class="text-2xl font-bold mb-1 text-center">みんなの出勤簿</h1>
-  <p class="text-sm text-center text-gray-500 mb-6">タイムカード → 社労士提出用 xlsx</p>
+  <p class="text-sm text-center text-gray-500 mb-6">タイムカード × 社労士提出</p>
   <form id="loginForm" class="bg-white p-6 rounded-lg shadow space-y-4">
     <div>
       <label class="block text-sm text-gray-600 mb-1">メールアドレス</label>
@@ -35,7 +36,7 @@
 <script type="module">
   import { auth, signInWithEmailAndPassword } from '/js/firebase-init.js';
   import { redirectIfAuthed } from '/js/auth-guard.js';
-  redirectIfAuthed('/attendance');
+  redirectIfAuthed('/punch');
   const form = document.getElementById('loginForm');
   const err = document.getElementById('err');
   const submitBtn = document.getElementById('submitBtn');
@@ -46,7 +47,7 @@
     const fd = new FormData(form);
     try {
       await signInWithEmailAndPassword(auth, fd.get('email').trim(), fd.get('password'));
-      location.href = '/attendance';
+      location.href = '/punch';
     } catch (ex) {
       submitBtn.disabled = false; submitBtn.textContent = 'ログイン';
       err.textContent = 'ログイン失敗: ' + (ex.code || ex.message);

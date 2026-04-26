@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>期間集計 - みんなの出勤簿</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .matrix-table { border-collapse: separate; border-spacing: 0; }
+    .matrix-table th, .matrix-table td {
+      border-right: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 6px 8px; font-size: 12px; white-space: nowrap;
+    }
+    .matrix-table thead th {
+      position: sticky; top: 0; background: #f9fafb; z-index: 2; font-weight: 600;
+    }
+    .matrix-table tbody th {
+      position: sticky; left: 0; background: #fff; z-index: 1;
+      text-align: left; font-weight: 500;
+    }
+    .matrix-table thead th.corner { left: 0; z-index: 3; }
+    .cell-sunday { background: #fee2e2; }
+    .cell-saturday { background: #dbeafe; }
+    .cell-present { background: #dcfce7; }
+    .cell-warn { background: #fef3c7; }
+    .cell-missing { color: #9ca3af; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen pb-20">
+<div id="app" class="max-w-full mx-auto"></div>
+
+<script type="module">
+  import {
+    db, ref, onValue, query, orderByChild, equalTo, set, get, serverTimestamp,
+    periodKeyFromDate, periodRange, currentPeriodKey, dateKeyJST, fmtHHmm, escapeHtml
+  } from '/js/firebase-init.js';
+  import { requireAuth } from '/js/auth-guard.js';
+  import { renderHeader, renderBottomNav, showFlash } from '/js/layout.js';
+
+  const me = await requireAuth();
+  const isOffice = me.role === 'office';
+
+  const urlParams = new URLSearchParams(location.search);
+  let currentKey = urlParams.get('period') || currentPeriodKey();
+
+  document.getElementById('app').innerHTML = `
+    ${renderHeader('📅 期間集計')}
+    <main class="px-4 py-4">
+      <div class="flex items-center gap-2 mb-3 flex-wrap">
+        <button id="prevBtn"  class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">← 前期間</button>
+        <div id="periodLabel" class="font-bold text-lg">—</div>
+        <span id="lockBadge" class="hidden px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-bold">🔒 ロック済</span>
+        <button id="nextBtn"  class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">次期間 →</button>
+        <button id="todayBtn" class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">今期間</button>
+        <div class="flex-1"></div>
+        ${isOffice ? `<button id="lockBtn" class="hidden px-3 py-1.5 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700 font-bold">🔒 期間をロック</button>
+                      <button id="unlockBtn" class="hidden px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300 font-bold">🔓 ロック解除</button>` : ''}
+        <button id="csvBtn" class="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700 font-bold">⇩ CSV出力</button>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+        <div class="bg-white rounded border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">対象社員</div>
+          <div id="cardEmpCount" class="text-xl font-bold">—</div>
+        </div>
+        <div class="bg-white rounded border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">総打刻数</div>
+          <div id="cardPunchCount" class="text-xl font-bold">—</div>
+        </div>
+        <div class="bg-white rounded border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">未退勤(要対応)</div>
+          <div id="cardMissingOut" class="text-xl font-bold text-yellow-700">—</div>
+        </div>
+        <div class="bg-white rounded border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">合計実働(簡易)</div>
+          <div id="cardTotalHours" class="text-xl font-bold">—</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded border border-gray-200 overflow-auto" style="max-height:60vh;">
+        <table class="matrix-table w-full" id="matrix"></table>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-3">
+        ※ 実働時間は (退勤 − 出勤 − 休憩1h固定) の簡易計算。詳細な深夜/残業/休日は <code>/attendance</code> で社労士提出xlsx生成（office）。<br>
+        ※ 未退勤(黄)は打刻漏れの可能性。<code>/admin</code> から修正（manager/office）。
+      </p>
+    </main>
+    ${renderBottomNav('/period', me.role)}
+  `;
+
+  document.getElementById('prevBtn').onclick = () => changePeriod(-1);
+  document.getElementById('nextBtn').onclick = () => changePeriod(1);
+  document.getElementById('todayBtn').onclick = () => { currentKey = currentPeriodKey(); refresh(); };
+  document.getElementById('csvBtn').onclick = exportCsv;
+
+  if (isOffice) {
+    document.getElementById('lockBtn').onclick = async () => {
+      if (!confirm(`期間 ${currentKey} をロックしますか？(打刻追記は引き続き可能、後から解除可)`)) return;
+      try {
+        const [s, e] = periodRange(currentKey);
+        await set(ref(db, `periods/${currentKey}`), {
+          key: currentKey, start: s, end: e, status: 'closed',
+          locked_by: me.id, locked_at: serverTimestamp()
+        });
+        showFlash('ロックしました');
+      } catch (ex) { showFlash('失敗: ' + ex.message, 'err'); }
+    };
+    document.getElementById('unlockBtn').onclick = async () => {
+      if (!confirm(`期間 ${currentKey} のロックを解除しますか？`)) return;
+      try {
+        await set(ref(db, `periods/${currentKey}`), null);
+        showFlash('解除しました');
+      } catch (ex) { showFlash('失敗: ' + ex.message, 'err'); }
+    };
+  }
+
+  function changePeriod(delta) {
+    const [y, m, h] = currentKey.split('-');
+    let year = Number(y), month = Number(m), half = h === 'H1' ? 1 : 2;
+    half += delta;
+    if (half > 2) { half = 1; month++; if (month > 12) { month = 1; year++; } }
+    if (half < 1) { half = 2; month--; if (month < 1) { month = 12; year--; } }
+    currentKey = `${year}-${String(month).padStart(2,'0')}-H${half}`;
+    refresh();
+  }
+
+  function refresh() {
+    const url = new URL(location.href);
+    url.searchParams.set('period', currentKey);
+    history.replaceState(null, '', url);
+    loadData();
+  }
+
+  let employees = {}, punches = [];
+  let unsubPunches = null, unsubPeriod = null;
+
+  onValue(ref(db, 'employees'), (snap) => { employees = snap.val() || {}; render(); });
+
+  function loadData() {
+    if (unsubPunches) unsubPunches();
+    if (unsubPeriod) unsubPeriod();
+    const q = query(ref(db, 'punches'), orderByChild('periodKey'), equalTo(currentKey));
+    unsubPunches = onValue(q, (snap) => {
+      const arr = [];
+      snap.forEach(c => { arr.push({ id: c.key, ...c.val() }); return false; });
+      punches = arr; render();
+    });
+    unsubPeriod = onValue(ref(db, `periods/${currentKey}`), (snap) => {
+      const data = snap.val();
+      const locked = data && data.status === 'closed';
+      const lb = document.getElementById('lockBadge');
+      const lockBtn = document.getElementById('lockBtn');
+      const unlockBtn = document.getElementById('unlockBtn');
+      lb.classList.toggle('hidden', !locked);
+      if (lockBtn)   lockBtn.classList.toggle('hidden', locked);
+      if (unlockBtn) unlockBtn.classList.toggle('hidden', !locked);
+    });
+  }
+  loadData();
+
+  function render() {
+    const [startDate, endDate] = periodRange(currentKey);
+    document.getElementById('periodLabel').textContent = `${startDate} 〜 ${endDate}`;
+    const days = [];
+    const start = new Date(startDate), end = new Date(endDate);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      days.push({ key: `${y}-${m}-${dd}`, day: d.getDate(), weekday: d.getDay() });
+    }
+    const emps = Object.keys(employees)
+      .map(id => ({ id, ...employees[id] }))
+      .filter(e => e.active !== false && e.name)
+      .sort((a, b) => (a.workNo || 0) - (b.workNo || 0));
+    const matrix = {};
+    for (const p of punches) {
+      if (!matrix[p.employeeId]) matrix[p.employeeId] = {};
+      if (!matrix[p.employeeId][p.dateKey]) matrix[p.employeeId][p.dateKey] = { ins: [], outs: [] };
+      (p.type === 'in' ? matrix[p.employeeId][p.dateKey].ins : matrix[p.employeeId][p.dateKey].outs).push(p);
+    }
+    let missingOut = 0, totalHours = 0;
+    for (const emp of emps) {
+      for (const day of days) {
+        const cell = matrix[emp.id]?.[day.key];
+        if (!cell) continue;
+        if (cell.ins.length > 0 && cell.outs.length === 0) missingOut++;
+        if (cell.ins.length > 0 && cell.outs.length > 0) {
+          const firstIn = Math.min(...cell.ins.map(p => p.timestamp));
+          const lastOut = Math.max(...cell.outs.map(p => p.timestamp));
+          const hrs = (lastOut - firstIn) / 3600000 - 1;
+          if (hrs > 0) totalHours += hrs;
+        }
+      }
+    }
+    document.getElementById('cardEmpCount').textContent = emps.length;
+    document.getElementById('cardPunchCount').textContent = punches.length;
+    document.getElementById('cardMissingOut').textContent = missingOut;
+    document.getElementById('cardTotalHours').textContent = totalHours.toFixed(1) + 'h';
+
+    const weekdayLabel = ['日','月','火','水','木','金','土'];
+    const headerRow = `
+      <thead>
+        <tr>
+          <th class="corner bg-gray-50 text-left" style="min-width:140px;">氏名 / 部門</th>
+          ${days.map(d => {
+            const cls = d.weekday === 0 ? 'cell-sunday' : (d.weekday === 6 ? 'cell-saturday' : '');
+            return `<th class="${cls}">${d.day}<br><span class="text-gray-500 font-normal">${weekdayLabel[d.weekday]}</span></th>`;
+          }).join('')}
+          <th class="bg-gray-50" style="min-width:60px;">日数</th>
+          <th class="bg-gray-50" style="min-width:60px;">実働h</th>
+        </tr>
+      </thead>`;
+    const bodyRows = emps.map(emp => {
+      let empDays = 0, empHours = 0;
+      const cells = days.map(d => {
+        const cell = matrix[emp.id]?.[d.key];
+        if (!cell || (cell.ins.length === 0 && cell.outs.length === 0)) {
+          const wkCls = d.weekday === 0 ? 'cell-sunday' : (d.weekday === 6 ? 'cell-saturday' : '');
+          return `<td class="${wkCls} cell-missing text-center">—</td>`;
+        }
+        const firstIn = cell.ins.length ? Math.min(...cell.ins.map(p => p.timestamp)) : null;
+        const lastOut = cell.outs.length ? Math.max(...cell.outs.map(p => p.timestamp)) : null;
+        let cls = 'cell-present', text = '';
+        if (firstIn && lastOut) {
+          const hrs = (lastOut - firstIn) / 3600000 - 1;
+          if (hrs > 0) empHours += hrs;
+          empDays++;
+          text = `<div class="text-[11px]">${fmtHHmm(firstIn)}</div><div class="text-[11px] text-gray-600">${fmtHHmm(lastOut)}</div>`;
+        } else if (firstIn) { cls = 'cell-warn'; text = `<div class="text-[11px]">${fmtHHmm(firstIn)}</div><div class="text-[11px] text-yellow-700">出のみ</div>`; }
+        else if (lastOut)   { cls = 'cell-warn'; text = `<div class="text-[11px] text-yellow-700">退のみ</div><div class="text-[11px]">${fmtHHmm(lastOut)}</div>`; }
+        return `<td class="${cls} text-center">${text}</td>`;
+      }).join('');
+      return `
+        <tr>
+          <th>
+            <div class="font-bold">${escapeHtml(emp.name)}</div>
+            <div class="text-[10px] text-gray-500">${escapeHtml(emp.dept || '')}</div>
+          </th>
+          ${cells}
+          <td class="text-center font-bold tabular-nums">${empDays}</td>
+          <td class="text-center font-bold tabular-nums">${empHours.toFixed(1)}</td>
+        </tr>`;
+    }).join('');
+    document.getElementById('matrix').innerHTML = headerRow + '<tbody>' + bodyRows + '</tbody>';
+  }
+
+  function exportCsv() {
+    const [startDate, endDate] = periodRange(currentKey);
+    const days = [];
+    const start = new Date(startDate), end = new Date(endDate);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      days.push(`${y}-${m}-${dd}`);
+    }
+    const emps = Object.keys(employees).map(id => ({ id, ...employees[id] }))
+      .filter(e => e.active !== false && e.name)
+      .sort((a, b) => (a.workNo || 0) - (b.workNo || 0));
+    const matrix = {};
+    for (const p of punches) {
+      if (!matrix[p.employeeId]) matrix[p.employeeId] = {};
+      if (!matrix[p.employeeId][p.dateKey]) matrix[p.employeeId][p.dateKey] = { ins: [], outs: [] };
+      (p.type === 'in' ? matrix[p.employeeId][p.dateKey].ins : matrix[p.employeeId][p.dateKey].outs).push(p);
+    }
+    const rows = [['社員ID','氏名','部門','日付','曜日','出勤','退勤','実働時間(簡易)','備考']];
+    const wlabel = ['日','月','火','水','木','金','土'];
+    for (const emp of emps) {
+      for (const dateKey of days) {
+        const cell = matrix[emp.id]?.[dateKey];
+        const wd = new Date(dateKey).getDay();
+        if (!cell) { rows.push([emp.id, emp.name, emp.dept||'', dateKey, wlabel[wd], '', '', '', '']); continue; }
+        const firstIn = cell.ins.length ? Math.min(...cell.ins.map(p => p.timestamp)) : null;
+        const lastOut = cell.outs.length ? Math.max(...cell.outs.map(p => p.timestamp)) : null;
+        let hrs = '', note = '';
+        if (firstIn && lastOut) { const h = (lastOut - firstIn) / 3600000 - 1; hrs = h > 0 ? h.toFixed(2) : '0.00'; }
+        else if (firstIn) note = '退勤打刻なし';
+        else if (lastOut) note = '出勤打刻なし';
+        rows.push([emp.id, emp.name, emp.dept||'', dateKey, wlabel[wd],
+          firstIn ? fmtHHmm(firstIn) : '', lastOut ? fmtHHmm(lastOut) : '', hrs, note]);
+      }
+    }
+    const csv = '﻿' + rows.map(r => r.map(c => {
+      const s = String(c ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    }).join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `timecard_${currentKey}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    showFlash(`CSV出力: ${currentKey}`);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>設定 - みんなの出勤簿</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#1a1a1a">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen pb-20">
+<div id="app" class="max-w-3xl mx-auto"></div>
+
+<script type="module">
+  import {
+    db, ref, onValue, set, update, serverTimestamp, escapeHtml
+  } from '/js/firebase-init.js';
+  import { requireAuth, logout } from '/js/auth-guard.js';
+  import { renderHeader, renderBottomNav, showFlash } from '/js/layout.js';
+
+  const me = await requireAuth();
+
+  document.getElementById('app').innerHTML = `
+    ${renderHeader('設定', { right: `<button id="logoutBtn" class="text-sm text-red-600 hover:underline">ログアウト</button>` })}
+    <main class="px-3 py-3 space-y-4">
+      <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-3">
+        <div class="text-sm font-bold text-gray-700">自分のプロフィール</div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">表示名</label>
+          <div class="flex gap-2">
+            <input id="myName" class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm" value="${escapeHtml(me.name || '')}" maxlength="50">
+            <button id="saveName" class="bg-gray-900 text-white px-3 py-2 rounded text-sm font-bold">保存</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div><span class="text-gray-500">メール:</span> <span class="font-mono">${escapeHtml(me.email || '-')}</span></div>
+          <div><span class="text-gray-500">権限:</span> <span class="font-bold ${me.role === 'office' ? 'text-purple-700' : me.role === 'manager' ? 'text-blue-700' : 'text-gray-700'}">${escapeHtml(me.role || 'staff')}</span></div>
+          <div class="col-span-2"><span class="text-gray-500">UID:</span> <span class="font-mono text-[10px] break-all">${me.id}</span></div>
+        </div>
+      </section>
+
+      <section id="usersSection" class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2 ${me.role === 'office' ? '' : 'hidden'}">
+        <div class="text-sm font-bold text-gray-700">ユーザー一覧（office のみ）</div>
+        <div class="text-xs text-gray-500 mb-2">role を変更すると即座に反映されます。office は最低1人必要。</div>
+        <div id="usersList" class="text-sm">読み込み中…</div>
+      </section>
+
+      <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
+        <div class="text-sm font-bold text-gray-700">関連リンク</div>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          <a href="/punch" class="block bg-gray-100 hover:bg-gray-200 rounded p-3 text-center">⏰ 打刻</a>
+          <a href="/today" class="block bg-gray-100 hover:bg-gray-200 rounded p-3 text-center">📋 本日一覧</a>
+          <a href="/period" class="block bg-gray-100 hover:bg-gray-200 rounded p-3 text-center">📅 期間集計</a>
+          ${me.role === 'manager' || me.role === 'office'
+            ? `<a href="/admin" class="block bg-gray-100 hover:bg-gray-200 rounded p-3 text-center">🔧 打刻管理</a>` : ''}
+          ${me.role === 'office'
+            ? `<a href="/employees" class="block bg-gray-100 hover:bg-gray-200 rounded p-3 text-center">👥 社員マスタ</a>
+               <a href="/attendance" class="block bg-gray-100 hover:bg-gray-200 rounded p-3 text-center">📊 社労士書類</a>` : ''}
+        </div>
+      </section>
+    </main>
+    ${renderBottomNav('/settings', me.role)}
+  `;
+
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+
+  document.getElementById('saveName').addEventListener('click', async () => {
+    const name = document.getElementById('myName').value.trim();
+    if (!name) { showFlash('表示名を入力してください', 'err'); return; }
+    try {
+      await update(ref(db, `users/${me.id}`), { name, updated_at: serverTimestamp() });
+      window.__me.name = name;
+      showFlash('保存しました');
+    } catch (e) { showFlash('保存失敗: ' + e.message, 'err'); }
+  });
+
+  if (me.role === 'office') {
+    const listEl = document.getElementById('usersList');
+    onValue(ref(db, 'users'), (snap) => {
+      const data = snap.val() || {};
+      const arr = Object.entries(data).map(([uid, v]) => ({ uid, ...v }))
+        .sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
+      const officeCount = arr.filter(u => u.role === 'office').length;
+      listEl.innerHTML = arr.map(u => `
+        <div class="flex items-center gap-3 py-2 border-b last:border-b-0">
+          <div class="flex-1 min-w-0">
+            <div class="font-medium truncate">${escapeHtml(u.name || u.email || u.uid)}</div>
+            <div class="text-xs text-gray-500 truncate">${escapeHtml(u.email || '')}</div>
+          </div>
+          <select class="role-sel border border-gray-300 rounded px-2 py-1 text-xs"
+                  data-uid="${u.uid}" data-current="${u.role || 'staff'}"
+                  ${u.uid === me.id ? 'disabled' : ''}>
+            <option value="staff"   ${u.role === 'staff'   ? 'selected' : ''}>staff</option>
+            <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>manager</option>
+            <option value="office"  ${u.role === 'office'  ? 'selected' : ''}>office</option>
+          </select>
+        </div>
+      `).join('');
+      listEl.querySelectorAll('.role-sel').forEach(sel => {
+        sel.addEventListener('change', async (e) => {
+          const uid = sel.dataset.uid;
+          const current = sel.dataset.current;
+          const next = sel.value;
+          if (next === current) return;
+          if (current === 'office' && next !== 'office' && officeCount <= 1) {
+            alert('office は最低1人必要です'); sel.value = current; return;
+          }
+          if (!confirm(`${uid.slice(0,6)}… の role を ${current} → ${next} に変更しますか？`)) {
+            sel.value = current; return;
+          }
+          try {
+            await update(ref(db, `users/${uid}`), { role: next, updated_at: serverTimestamp() });
+            sel.dataset.current = next;
+            showFlash(`role を ${next} に変更`);
+          } catch (ex) {
+            sel.value = current;
+            showFlash('変更失敗: ' + ex.message, 'err');
+          }
+        });
+      });
+    });
+  }
+</script>
+</body>
+</html>

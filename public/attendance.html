@@ -25,15 +25,14 @@
     .flash-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
+<body class="bg-gray-50 text-gray-900 min-h-screen pb-20">
 <div id="app" class="max-w-5xl mx-auto pb-10">
   <header class="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
     <div class="flex items-center">
-      <h1 class="font-bold text-lg">🕒 みんなの出勤簿</h1>
+      <h1 class="font-bold text-base">📊 社労士書類生成</h1>
     </div>
     <div class="flex items-center gap-3">
       <span id="meLabel" class="text-xs text-gray-500"></span>
-      <button onclick="window.__logout()" class="text-sm text-gray-500">ログアウト</button>
     </div>
   </header>
 
@@ -144,11 +143,14 @@
     saveEdit, loadEdits,
     monthDataToPeople, applyEdits,
   } from '/js/attendance-store.js';
-  import { requireAuth } from '/js/auth-guard.js';
+  import { requireRole } from '/js/auth-guard.js';
   import { escapeHtml } from '/js/firebase-init.js';
+  import { renderBottomNav } from '/js/layout.js';
 
-  const me = await requireAuth();
+  const me = await requireRole(['office']);
+  if (!me) throw new Error('blocked');
   document.getElementById('meLabel').textContent = me.name ? `👤 ${me.name}` : '';
+  document.body.insertAdjacentHTML('beforeend', renderBottomNav('/attendance', me.role));
 
   const $ = (id) => document.getElementById(id);
   const state = {

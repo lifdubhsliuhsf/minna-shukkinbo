@@ -1,8 +1,8 @@
 {
   "name": "みんなの出勤簿",
   "short_name": "みん出勤",
-  "description": "タイムカードExcelを社労士提出用の出勤簿データに変換して共有するPWA",
-  "start_url": "/attendance",
+  "description": "タイムカード打刻 × 社労士提出用xlsx生成を統合したPWA",
+  "start_url": "/punch",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f9fafb",

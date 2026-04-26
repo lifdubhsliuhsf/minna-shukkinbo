@@ -1,22 +1,78 @@
 {
   "rules": {
-    "att_users": {
+    "users": {
+      ".read": "auth != null",
+      ".indexOn": ["role"],
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'office')",
+        ".validate": "newData.hasChildren(['name'])",
+        "role": {
+          ".validate": "(!data.exists() && (newData.val() === 'staff' || (newData.val() === 'office' && root.child('meta/firstOfficeUid').val() === auth.uid && auth.uid === $uid))) || (data.exists() && (newData.val() === data.val() || (root.child('users').child(auth.uid).child('role').val() === 'office' && auth.uid !== $uid && (newData.val() === 'staff' || newData.val() === 'manager' || newData.val() === 'office'))))"
+        },
+        "name":         { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80" },
+        "email":        { ".validate": "newData.isString()" },
+        "color_index":  { ".validate": "newData.isNumber()" },
+        "created_at":   { ".validate": "newData.isNumber() || newData.val() === now" },
+        "updated_at":   { ".validate": "newData.isNumber() || newData.val() === now" }
+      }
+    },
+
+    "meta": {
+      ".read": "auth != null",
+      "firstOfficeUid": {
+        ".write": "auth != null && !data.exists()"
+      }
+    },
+
+    "employees": {
+      ".read": "auth != null",
+      ".indexOn": ["workNo", "active"],
+      "$empId": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'office'"
+      }
+    },
+
+    "punches": {
+      ".read": "auth != null",
+      ".indexOn": ["employeeId", "periodKey", "dateKey", "timestamp"],
+      "$punchId": {
+        ".write": "auth != null && (!data.exists() || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'office')",
+        ".validate": "newData.hasChildren(['employeeId','type','timestamp','dateKey','periodKey']) && (newData.child('type').val() === 'in' || newData.child('type').val() === 'out') && (root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'office' || newData.child('timestamp').val() === now)"
+      }
+    },
+
+    "editLogs": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'office')",
+      ".indexOn": ["targetPunchId", "editedAt"],
+      "$logId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'office') && !data.exists()"
+      }
+    },
+
+    "periods": {
+      ".read": "auth != null",
+      "$periodKey": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'office'"
+      }
+    },
+
+    "devices": {
       ".read": "auth != null",
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".validate": "newData.hasChildren(['name'])"
+        ".validate": "newData.hasChildren(['label','firstSeenAt'])"
       }
     },
 
     "attendance": {
-      ".read": "auth != null",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'office'",
       "master": {
-        ".write": "auth != null"
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'office'"
       },
       "months": {
         ".indexOn": ["uploaded_at"],
         "$ym": {
-          ".write": "auth != null"
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'office'"
         }
       }
     }
