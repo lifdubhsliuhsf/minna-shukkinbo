@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>みんなの出勤簿 — 操作マニュアル</title>
+<style>
+  /* ===== ベース ===== */
+  * { box-sizing: border-box; }
+  html { font-size: 14px; }
+  body {
+    font-family: -apple-system, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+    color: #111;
+    background: #f9fafb;
+    margin: 0;
+    line-height: 1.7;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 48px 56px 64px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+
+  /* ===== タイポグラフィ ===== */
+  h1 {
+    font-size: 28px; margin: 0 0 6px;
+    border-bottom: 3px solid #111;
+    padding-bottom: 12px;
+  }
+  h1 + .subtitle { color: #666; font-size: 14px; margin: 0 0 32px; }
+  h2 {
+    font-size: 20px;
+    margin: 48px 0 14px;
+    padding: 8px 12px;
+    background: #111;
+    color: #fff;
+    border-radius: 4px;
+  }
+  h3 {
+    font-size: 16px;
+    margin: 28px 0 10px;
+    border-left: 4px solid #111;
+    padding-left: 10px;
+  }
+  h4 { font-size: 14px; margin: 18px 0 6px; color: #333; }
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 4px; }
+  code {
+    background: #f1f5f9;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    line-height: 1.5;
+  }
+
+  /* ===== ボックス ===== */
+  .note, .warn, .ok {
+    border-left: 4px solid;
+    padding: 10px 14px;
+    margin: 14px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+  }
+  .note { background: #eff6ff; border-color: #3b82f6; }
+  .warn { background: #fef3c7; border-color: #f59e0b; }
+  .ok   { background: #ecfdf5; border-color: #10b981; }
+  .note b, .warn b, .ok b { display: inline-block; margin-right: 6px; }
+
+  /* ===== 表 ===== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid #d1d5db;
+    padding: 6px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #f3f4f6; font-weight: 700; }
+  td.center, th.center { text-align: center; }
+
+  /* ===== 役割バッジ ===== */
+  .role { display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+  .role-staff   { background: #f3f4f6; color: #374151; }
+  .role-manager { background: #dbeafe; color: #1e40af; }
+  .role-office  { background: #ede9fe; color: #5b21b6; }
+
+  /* ===== ボタン擬似 ===== */
+  .btn-mock {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 12px;
+    margin: 0 2px;
+    color: #fff;
+  }
+  .btn-in    { background: #16a34a; }
+  .btn-out   { background: #dc2626; }
+  .btn-break { background: #f59e0b; }
+  .btn-bend  { background: #0891b2; }
+
+  /* ===== TOC ===== */
+  .toc {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 16px 22px;
+    margin: 0 0 32px;
+  }
+  .toc h3 { margin-top: 0; border: none; padding: 0; }
+  .toc ol { columns: 2; column-gap: 28px; padding-left: 18px; }
+  .toc li { break-inside: avoid; margin-bottom: 4px; font-size: 13px; }
+  .toc a { color: #1d4ed8; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ===== 画面イメージ (擬似) ===== */
+  .screen {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    margin: 12px 0 18px;
+    overflow: hidden;
+    font-size: 12px;
+  }
+  .screen-header {
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 6px 10px;
+    font-weight: 700;
+  }
+  .screen-body { padding: 10px 12px; }
+
+  /* 状態バッジ */
+  .badge {
+    display: inline-block; padding: 1px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+  }
+  .badge-working { background: #dcfce7; color: #14532d; }
+  .badge-break   { background: #fef3c7; color: #92400e; }
+  .badge-done    { background: #fee2e2; color: #7f1d1d; }
+  .badge-none    { background: #f1f5f9; color: #64748b; }
+
+  /* ===== 印刷スタイル ===== */
+  @media print {
+    @page { size: A4; margin: 16mm 14mm; }
+    html, body { background: #fff; }
+    .page {
+      box-shadow: none;
+      padding: 0;
+      max-width: none;
+    }
+    .no-print { display: none !important; }
+    h2 { break-before: page; }
+    h2:first-of-type { break-before: avoid; }
+    h3, h4 { break-after: avoid; }
+    pre, table, .screen, .note, .warn, .ok { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+    .toc ol { columns: 1; }
+  }
+
+  /* ===== 印刷用ボタン (画面でのみ表示) ===== */
+  .print-bar {
+    position: sticky; top: 0; z-index: 50;
+    background: #111; color: #fff;
+    padding: 8px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .print-bar button {
+    background: #fff; color: #111;
+    border: 0; padding: 6px 14px; border-radius: 4px;
+    font-weight: 700; cursor: pointer; font-size: 13px;
+  }
+  .print-bar button:hover { background: #fbbf24; }
+</style>
+</head>
+<body>
+
+<div class="print-bar no-print">
+  <span>📘 みんなの出勤簿 操作マニュアル</span>
+  <button onclick="window.print()">🖨 印刷 / PDF保存</button>
+</div>
+
+<div class="page">
+
+<h1>みんなの出勤簿 — 操作マニュアル</h1>
+<p class="subtitle">本書は <code>https://attendance-app-b047c.web.app</code> で稼働する勤怠 PWA「みんなの出勤簿」の操作手順書です。最終更新 2026-04-26 / 対象バージョン v8 (sw cache key)</p>
+
+<div class="toc no-print-toc">
+  <h3>目次</h3>
+  <ol>
+    <li><a href="#intro">1. はじめに / 全体像</a></li>
+    <li><a href="#roles">2. ロール（権限）</a></li>
+    <li><a href="#setup">3. 初回セットアップ</a></li>
+    <li><a href="#auth">4. ログイン / 新規登録</a></li>
+    <li><a href="#punch">5. 打刻（/punch）</a></li>
+    <li><a href="#today">6. 本日の打刻一覧（/today）</a></li>
+    <li><a href="#period">7. 期間集計（/period）</a></li>
+    <li><a href="#admin">8. 打刻管理（/admin）</a></li>
+    <li><a href="#employees">9. 社員マスタ（/employees）</a></li>
+    <li><a href="#attendance">10. 社労士書類生成（/attendance）</a></li>
+    <li><a href="#settings">11. 設定（/settings）</a></li>
+    <li><a href="#calc">12. 実働時間の計算ルール</a></li>
+    <li><a href="#pwa">13. ホーム画面に追加（PWA）</a></li>
+    <li><a href="#faq">14. よくある質問・トラブル対応</a></li>
+    <li><a href="#data">15. データ構造（参考）</a></li>
+  </ol>
+</div>
+
+<!-- ========== 1. はじめに ========== -->
+<h2 id="intro">1. はじめに / 全体像</h2>
+
+<p><b>みんなの出勤簿</b> は、ブラウザで打刻 → 期間ごとの実働集計 → 社労士提出用の出勤簿 xlsx 生成 までを一つにまとめた PWA（プログレッシブ Web アプリ）です。Firebase の無料プランで稼働しています。</p>
+
+<h3>主な機能</h3>
+<ul>
+  <li><b>打刻（出勤・退勤・休憩・休憩終わり）</b>：ブラウザの大型ボタンで記録</li>
+  <li><b>本日の打刻一覧</b>：誰が今勤務中／休憩中／退勤済みかを一目で確認</li>
+  <li><b>期間集計</b>：月2回制（1〜15日 / 16〜末）の出勤マトリクス表示・CSV 出力</li>
+  <li><b>打刻管理</b>：打刻漏れの追加・修正・削除（履歴を <code>editLogs</code> に残す）</li>
+  <li><b>社員マスタ</b>：氏名・部門・社員番号の管理</li>
+  <li><b>社労士書類生成</b>：1か月分の出勤簿 xlsx を自動生成（残業・深夜・週40h アラート付き）</li>
+  <li><b>設定</b>：自分の表示名変更・ユーザー権限の管理</li>
+</ul>
+
+<h3>画面構成（ボトムナビ）</h3>
+<table>
+<thead><tr><th class="center">アイコン</th><th>パス</th><th>機能</th><th>必要権限</th></tr></thead>
+<tbody>
+<tr><td class="center">⏰</td><td><code>/punch</code></td><td>打刻キオスク</td><td><span class="role role-staff">staff</span> 以上</td></tr>
+<tr><td class="center">📋</td><td><code>/today</code></td><td>本日の打刻一覧</td><td><span class="role role-staff">staff</span> 以上</td></tr>
+<tr><td class="center">📅</td><td><code>/period</code></td><td>期間集計（H1/H2）</td><td><span class="role role-staff">staff</span> 以上</td></tr>
+<tr><td class="center">🔧</td><td><code>/admin</code></td><td>打刻編集</td><td><span class="role role-manager">manager</span> 以上</td></tr>
+<tr><td class="center">📊</td><td><code>/attendance</code></td><td>社労士書類生成</td><td><span class="role role-office">office</span> のみ</td></tr>
+<tr><td class="center">👥</td><td><code>/employees</code></td><td>社員マスタ管理</td><td><span class="role role-office">office</span> のみ</td></tr>
+<tr><td class="center">⚙️</td><td><code>/settings</code></td><td>プロフィール / 権限管理</td><td><span class="role role-staff">staff</span> 以上</td></tr>
+</tbody>
+</table>
+
+<!-- ========== 2. ロール ========== -->
+<h2 id="roles">2. ロール（権限）</h2>
+
+<p>権限は3層あります。最初に新規登録した人が自動的に <span class="role role-office">office</span> に昇格し、それ以降は全員 <span class="role role-staff">staff</span> として登録されます。<span class="role role-office">office</span> が必要に応じて <span class="role role-manager">manager</span> や <span class="role role-office">office</span> に昇格させてください。</p>
+
+<table>
+<thead>
+  <tr>
+    <th>操作</th>
+    <th class="center"><span class="role role-staff">staff</span></th>
+    <th class="center"><span class="role role-manager">manager</span></th>
+    <th class="center"><span class="role role-office">office</span></th>
+  </tr>
+</thead>
+<tbody>
+  <tr><td>打刻（出勤・退勤・休憩）</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
+  <tr><td>本日一覧 / 期間集計の閲覧</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
+  <tr><td>期間 CSV ダウンロード</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
+  <tr><td>自分の表示名変更</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
+  <tr><td>打刻の追加・修正・削除（<code>/admin</code>）</td><td class="center">−</td><td class="center">✓</td><td class="center">✓</td></tr>
+  <tr><td><code>editLogs</code>（修正履歴）の閲覧</td><td class="center">−</td><td class="center">✓</td><td class="center">✓</td></tr>
+  <tr><td>社員マスタの編集（<code>/employees</code>）</td><td class="center">−</td><td class="center">−</td><td class="center">✓</td></tr>
+  <tr><td>社労士書類の生成（<code>/attendance</code>）</td><td class="center">−</td><td class="center">−</td><td class="center">✓</td></tr>
+  <tr><td>ユーザーの role 変更</td><td class="center">−</td><td class="center">−</td><td class="center">✓</td></tr>
+</tbody>
+</table>
+
+<div class="warn"><b>⚠</b> <code>office</code> は最低1人必要です。最後の <code>office</code> を <code>staff</code> に降格しようとするとブロックされます。</div>
+
+<!-- ========== 3. 初回セットアップ ========== -->
+<h2 id="setup">3. 初回セットアップ</h2>
+
+<ol>
+  <li><b>URL を開く</b>：<code>https://attendance-app-b047c.web.app</code></li>
+  <li><b>新規登録</b>：「新規登録はこちら」→ 表示名・メール・パスワードを入力 →「登録」</li>
+  <li>初回登録者は自動的に <span class="role role-office">office</span> になり、すぐ全機能にアクセス可能</li>
+  <li><b>社員マスタの確認</b>：<code>/employees</code> で 98 名のシード（上野／谷川…）が入っているか確認</li>
+  <li><b>他のスタッフを招待</b>：各自に「<code>/register</code> で登録してください」と案内</li>
+  <li>必要に応じて <code>/settings</code> でロールを <span class="role role-manager">manager</span> や <span class="role role-office">office</span> に昇格</li>
+</ol>
+
+<div class="note"><b>💡</b> キオスク端末（事務所共有 PC など）で打刻させたい場合は、その端末用の専用アカウントを作って <span class="role role-staff">staff</span> でログインしっぱなしにします。打刻時は氏名選択 + 出勤ボタンの2タップでOK。</div>
+
+<!-- ========== 4. ログイン / 新規登録 ========== -->
+<h2 id="auth">4. ログイン / 新規登録</h2>
+
+<h3>ログイン（<code>/login</code>）</h3>
+<ol>
+  <li>メールアドレスとパスワードを入力</li>
+  <li>「ログイン」をタップ</li>
+  <li>成功すれば自動的に <code>/punch</code> に遷移</li>
+</ol>
+
+<h3>新規登録（<code>/register</code>）</h3>
+<ol>
+  <li>表示名（田中太郎、〇〇店など）</li>
+  <li>メールアドレス</li>
+  <li>パスワード（6文字以上）と確認入力</li>
+  <li>「登録」をタップ</li>
+</ol>
+
+<div class="ok"><b>✓</b> 登録は誰でも可能ですが、初期権限は <span class="role role-staff">staff</span> です。社内利用を前提にしているため、URL は社外に出さないでください。</div>
+
+<!-- ========== 5. /punch ========== -->
+<h2 id="punch">5. 打刻（<code>/punch</code>）</h2>
+
+<h3>画面構成</h3>
+<div class="screen">
+  <div class="screen-header">⏰ 打刻</div>
+  <div class="screen-body">
+    <p style="margin:0 0 8px;">本日の打刻状況（一覧表）<span style="float:right;color:#666">勤務中 3 / 休憩 1 / 退勤済 5 / 全98名</span></p>
+    <p style="font-size:32px;font-weight:900;text-align:center;margin:8px 0;font-family:monospace;">10:23:45</p>
+    <p style="text-align:center;color:#666;font-size:11px;margin:0 0 10px;">2026/04/26 (日)</p>
+    <p style="margin:0 0 6px;font-size:11px;font-weight:700;">氏名を選択</p>
+    <p style="border:1px solid #d1d5db;padding:4px 8px;border-radius:4px;font-size:13px;margin:0 0 10px;">▼ 上野（代表）</p>
+    <p style="margin:0 0 6px;font-size:11px;color:#666;">現在の状態 → <span class="badge badge-working">勤務中</span></p>
+    <p style="text-align:center;margin:8px 0;">
+      <span class="btn-mock btn-in">出 勤</span>
+      <span class="btn-mock btn-out">退 勤</span><br>
+      <span class="btn-mock btn-break">休 憩</span>
+      <span class="btn-mock btn-bend">休憩終わり</span>
+    </p>
+  </div>
+</div>
+
+<h3>使い方</h3>
+<ol>
+  <li>セレクトボックスから氏名を選ぶ（前回選んだ人を覚えています）</li>
+  <li>「現在の状態」を確認 → 押せるボタンだけが有効化される</li>
+  <li>該当ボタンをタップ → 確認ダイアログで「OK」</li>
+  <li>下部の「本日の打刻履歴」に記録が即座に追加される</li>
+</ol>
+
+<h3>状態と押せるボタン</h3>
+<table>
+<thead><tr><th>現在の状態</th><th class="center">出勤</th><th class="center">退勤</th><th class="center">休憩</th><th class="center">休憩終わり</th><th>用途</th></tr></thead>
+<tbody>
+<tr><td><span class="badge badge-none">未出勤</span></td><td class="center">✓</td><td class="center">−</td><td class="center">−</td><td class="center">−</td><td>1日の最初</td></tr>
+<tr><td><span class="badge badge-working">勤務中</span></td><td class="center">−</td><td class="center">✓</td><td class="center">✓</td><td class="center">−</td><td>休憩入りまたは終業</td></tr>
+<tr><td><span class="badge badge-break">休憩中</span></td><td class="center">−</td><td class="center">✓ *</td><td class="center">−</td><td class="center">✓</td><td>業務再開 or 直帰</td></tr>
+<tr><td><span class="badge badge-done">退勤済み</span></td><td class="center">✓</td><td class="center">−</td><td class="center">−</td><td class="center">−</td><td>テレワーク再開</td></tr>
+</tbody>
+</table>
+<p style="font-size:12px;color:#666;">* 休憩中の直帰も可能（業務上やむを得ない場合の救済措置）</p>
+
+<h3>複数回の休憩・テレワーク再開に対応</h3>
+<p>1日に複数回 <b>休憩 → 休憩終わり</b> を押せば、それぞれ独立した休憩区間として記録され、実働時間から差し引かれます。</p>
+<p>退勤後に「テレワークで残務をこなす」場合は、もう一度 <b>出勤</b> ボタンを押してください。新しいセッションが始まり、その分の労働時間も合算されます（移動時間や休憩時間の隙間は実働に含まれません）。</p>
+
+<div class="note"><b>💡</b> 上部に常時表示される「本日の打刻状況」テーブルは全社員のリアルタイム状況です。新しい打刻があれば自動で更新されます。</div>
+
+<h3>本日の CSV ダウンロード</h3>
+<p>右上の「⇩ 本日CSV」ボタンで、本日の社員別の出勤・退勤・休憩・実働時間を CSV 形式でダウンロードできます（Excel で開けます）。</p>
+
+<!-- ========== 6. /today ========== -->
+<h2 id="today">6. 本日の打刻一覧（<code>/today</code>）</h2>
+
+<p>その日の全社員の打刻状況を一覧表で表示します。閲覧専用。</p>
+
+<table>
+<thead><tr><th>列</th><th>意味</th></tr></thead>
+<tbody>
+<tr><td>No</td><td>workNo（社員番号順表示用）</td></tr>
+<tr><td>氏名 / 部門</td><td>マスタから自動表示</td></tr>
+<tr><td>出勤</td><td>当日最初の <code>in</code> 打刻時刻</td></tr>
+<tr><td>退勤</td><td>当日最後の <code>out</code> 打刻時刻</td></tr>
+<tr><td>休憩</td><td>当日の休憩時間合計</td></tr>
+<tr><td>実働</td><td>退勤−出勤−休憩（マルチセッション対応）</td></tr>
+<tr><td>状態</td><td>勤 / 休 / 退 / 未</td></tr>
+</tbody>
+</table>
+
+<!-- ========== 7. /period ========== -->
+<h2 id="period">7. 期間集計（<code>/period</code>）</h2>
+
+<p>月2回制（H1: 1〜15日 / H2: 16〜末日）の集計画面。社員 × 日付のマトリクスで一目で把握できます。</p>
+
+<h3>画面の操作</h3>
+<ul>
+  <li><b>← 前期間 / 次期間 →</b>：期間を移動（URL の <code>?period=2026-04-H1</code> で固定可）</li>
+  <li><b>今期間</b>：現在の期間にジャンプ</li>
+  <li><b>⇩ CSV出力</b>：表示中の期間を CSV ダウンロード（社員ID／氏名／部門／日付／曜日／出勤／退勤／休憩h／実働h／備考）</li>
+</ul>
+
+<h3>サマリカード</h3>
+<ul>
+  <li><b>対象社員</b>：active な社員数</li>
+  <li><b>総打刻数</b>：期間内の打刻件数</li>
+  <li><b>未退勤(要対応)</b>：出勤打刻のみで退勤がない日（黄色セル）</li>
+  <li><b>合計実働(簡易)</b>：期間内の全社員実働時間合計</li>
+</ul>
+
+<h3>マトリクスの色分け</h3>
+<ul>
+  <li><b>緑</b>：通常勤務（出勤＋退勤）</li>
+  <li><b>黄</b>：打刻漏れ（出のみ／退のみ）— <code>/admin</code> で要修正</li>
+  <li><b>薄赤</b>：日曜日</li>
+  <li><b>薄青</b>：土曜日</li>
+  <li><b>—</b>：未出勤</li>
+</ul>
+
+<h3>セル内表記の例</h3>
+<pre>09:00
+18:00
+休1.0h     ← 休憩時間が記録されていれば表示</pre>
+
+<!-- ========== 8. /admin ========== -->
+<h2 id="admin">8. 打刻管理（<code>/admin</code>） <span class="role role-manager">manager</span> <span class="role role-office">office</span></h2>
+
+<p>打刻漏れの補正、誤打刻の修正、削除を行います。すべての操作は <code>editLogs</code> に履歴として残ります。</p>
+
+<h3>使い方</h3>
+<ol>
+  <li>社員と日付を選択</li>
+  <li>その日の打刻一覧が表示される</li>
+  <li><b>編集</b>：行右の「編集」 → モーダルで種別・日時・理由を入力 → 保存</li>
+  <li><b>削除</b>：行右の「削除」 → 理由を入力 → 確認</li>
+  <li><b>追加</b>：「+ 打刻を追加」ボタン → 新しい打刻をモーダルで入力</li>
+</ol>
+
+<div class="warn"><b>⚠</b> 修正・削除には <b>必ず理由</b> が必要です。これは法的監査に対応するための措置で、後から「何のために変えたのか」を追跡できるようにしています。</div>
+
+<h3>修正履歴の確認</h3>
+<p>ページ下部「<code>修正履歴（editLogs）最新30件</code>」を展開すると、誰が・いつ・何を・なぜ変更したかが見られます。</p>
+
+<!-- ========== 9. /employees ========== -->
+<h2 id="employees">9. 社員マスタ（<code>/employees</code>） <span class="role role-office">office</span></h2>
+
+<h3>追加</h3>
+<ol>
+  <li>上部「新規追加」セクションに No.・氏名・部門・社員番号を入力</li>
+  <li>「追加」 → <code>E099</code> のような連番 ID で登録される</li>
+</ol>
+
+<h3>編集</h3>
+<p>一覧の入力欄に直接タイプして編集 → フォーカスを外すと自動保存。</p>
+
+<h3>退職処理</h3>
+<p>「在籍」のチェックを外す → 打刻画面のドロップダウンから消える。打刻履歴は残るので過去データは無傷。</p>
+
+<h3>完全削除</h3>
+<p>右端の「削除」 → 確認後に <code>employees</code> から消える。打刻履歴は残ります（<code>punches</code> ツリーは独立）。</p>
+
+<!-- ========== 10. /attendance ========== -->
+<h2 id="attendance">10. 社労士書類生成（<code>/attendance</code>） <span class="role role-office">office</span></h2>
+
+<p>1か月分の出勤簿を、残業・深夜・週40h 集計付きで xlsx にまとめる画面。打刻データから自動生成するため、別途 Excel ファイルをアップロードする必要はありません。</p>
+
+<h3>生成手順</h3>
+<ol>
+  <li>「① 対象月を選んで生成」で対象月を選択（既定: 当月）</li>
+  <li>「📊 生成」をタップ</li>
+  <li><code>/punches</code> から自動集計 → 「② 過去の出勤簿」リストに追加 + サマリ表示</li>
+  <li>サマリ表で人ごとの労働時間・残業・深夜・アラートを確認</li>
+  <li>必要なら個人行右の「詳細」で日別の打刻と編集</li>
+  <li>右上「全員分ダウンロード (xlsx)」 → 1ファイル（複数シート）でダウンロード</li>
+</ol>
+
+<h3>ダウンロード xlsx の構成</h3>
+<p>1ファイルに複数のシートが入っています。Excel/Numbers 下部のシートタブで切り替えて閲覧してください。</p>
+<ul>
+  <li><b>サマリ</b>シート：作業番号・氏名・部門・総労働時間・総残業時間・総深夜時間・アラート（全員1行ずつ）</li>
+  <li><b>E001_上野</b>、<b>E002_谷川</b> ……：1人につき1シート。日別の打刻と労働時間、上部に集計アラート行</li>
+</ul>
+
+<h3>サマリのアラート列</h3>
+<table>
+<thead><tr><th>表示</th><th>意味</th></tr></thead>
+<tbody>
+<tr><td>月残業45h超</td><td>36協定の月45h上限を超過。要対応</td></tr>
+<tr><td>週40h超あり</td><td>その月のどこかで法定週40h超過</td></tr>
+<tr><td>日8h超あり</td><td>その月のどこかで法定日8h超過</td></tr>
+<tr><td>打刻漏れ</td><td>出勤か退勤の片方が欠けている日がある</td></tr>
+<tr><td>編集あり</td><td><code>/admin</code> から手動補正された行がある</td></tr>
+</tbody>
+</table>
+
+<h3>個人別シートの列</h3>
+<table>
+<thead><tr><th>列</th><th>説明</th></tr></thead>
+<tbody>
+<tr><td>日付</td><td>4/1(火) のような曜日付き表記</td></tr>
+<tr><td>出勤時間 / 退勤時間</td><td>その日の最初の出勤打刻 / 最後の退勤打刻</td></tr>
+<tr><td>休憩時間</td><td>休憩開始〜休憩終わり打刻ペアの合計（複数回対応）</td></tr>
+<tr><td>労働時間</td><td>退勤−出勤−休憩（マルチセッション対応）</td></tr>
+<tr><td>残業時間</td><td>労働時間 − 8h（負ならゼロ）</td></tr>
+<tr><td>深夜労働時間</td><td>22:00〜翌5:00 に該当する時間</td></tr>
+<tr><td>残業時間累計[週]</td><td>その週の月曜からの残業累計</td></tr>
+<tr><td>アラート</td><td>その日固有の警告（日8h超／週40h超／打刻漏れ／編集済 など）</td></tr>
+</tbody>
+</table>
+
+<h3>過去の出勤簿の再表示</h3>
+<p>「② 過去の出勤簿」リストから過去月をクリックすると、保存済みデータが表示されます。再生成は不要。</p>
+
+<h3>生成済み月の上書き</h3>
+<p>同じ月で再度「生成」を押すと、確認ダイアログ「再生成して上書きしますか？」が出ます。OK で最新の <code>/punches</code> から再集計されます（<code>/admin</code> の手動修正もそのまま反映）。</p>
+
+<!-- ========== 11. /settings ========== -->
+<h2 id="settings">11. 設定（<code>/settings</code>）</h2>
+
+<h3>自分のプロフィール</h3>
+<ul>
+  <li>表示名はいつでも変更可能</li>
+  <li>メール・権限・UID は表示のみ</li>
+</ul>
+
+<h3>ユーザー一覧（<span class="role role-office">office</span> のみ）</h3>
+<ul>
+  <li>登録順に全ユーザーが並ぶ</li>
+  <li>各人の右側のセレクトで <code>staff</code> / <code>manager</code> / <code>office</code> を切り替え</li>
+  <li>変更前に確認ダイアログが出る</li>
+  <li>自分自身のロール変更はできない（誤操作防止）</li>
+  <li>最後の <code>office</code> を降格しようとするとブロック</li>
+</ul>
+
+<h3>関連リンク</h3>
+<p>権限に応じて、各画面へのショートカットリンクが表示されます。</p>
+
+<!-- ========== 12. 計算ルール ========== -->
+<h2 id="calc">12. 実働時間の計算ルール</h2>
+
+<p>すべての画面で共通に使われている <code>computeWorkHours</code> 関数のロジックを説明します。</p>
+
+<h3>基本式</h3>
+<pre>実働時間 = (退勤 − 出勤) − Σ休憩時間</pre>
+<p>1日に複数の出勤／退勤がある場合（テレワーク再出勤など）は、各セッションごとに上記を算出して合計します。</p>
+
+<h3>状態走査アルゴリズム</h3>
+<p>打刻を時系列順に並べ、以下のルールで状態を更新しながら「勤務中」区間の合計を加算します。</p>
+<table>
+<thead><tr><th>現在状態</th><th>打刻</th><th>処理</th><th>新状態</th></tr></thead>
+<tbody>
+<tr><td>none / done</td><td>in</td><td>workStart 記録</td><td>working</td></tr>
+<tr><td>working</td><td>out</td><td>workMs += (now − workStart) / sessions++</td><td>done</td></tr>
+<tr><td>working</td><td>break_start</td><td>workMs += (now − workStart)</td><td>on_break</td></tr>
+<tr><td>on_break</td><td>break_end</td><td>breakMs += (now − breakStart)</td><td>working</td></tr>
+<tr><td>on_break</td><td>out</td><td>未閉休憩は計上せずセッション終了</td><td>done</td></tr>
+</tbody>
+</table>
+
+<h3>残業 / 深夜の判定</h3>
+<ul>
+  <li><b>日残業</b>: その日の労働時間 − 法定 8h（負ならゼロ）</li>
+  <li><b>週残業</b>: 月曜起点の週内累計が 40h を超えた分</li>
+  <li><b>月残業</b>: 月内合計が 45h（36協定上限）を超えるとアラート</li>
+  <li><b>深夜労働</b>: 22:00〜翌5:00 に該当する時間（前日 0:00 越し勤務にも対応）</li>
+</ul>
+
+<h3>休憩の扱い</h3>
+<p>旧仕様の「一律 0.75h（45分）控除」は廃止。<code>break_start</code> と <code>break_end</code> 打刻ペアから実時間を計上します。</p>
+
+<div class="note"><b>💡</b> 6時間未満勤務でも休憩を記録できます（労基法上は6時間未満は休憩義務なしですが、自由意思での記録は妨げません）。</div>
+
+<h3>未閉ペアの扱い</h3>
+<ul>
+  <li><b>退勤打刻なし</b>: その日の労働時間は「不明」扱い（黄色アラート）</li>
+  <li><b>休憩終わり打刻なし</b>: その休憩は計上せず、退勤時にセッション終了</li>
+  <li>いずれも <code>/admin</code> から手動補正可能（履歴は editLogs に残る）</li>
+</ul>
+
+<!-- ========== 13. PWA ========== -->
+<h2 id="pwa">13. ホーム画面に追加（PWA）</h2>
+
+<p>スマホ・タブレット・PC のホーム画面にアイコンを追加することで、ブラウザを開かずに直接起動できます。</p>
+
+<h3>iPhone / iPad（Safari）</h3>
+<ol>
+  <li>Safari で <code>https://attendance-app-b047c.web.app</code> を開く</li>
+  <li>下部の共有アイコン（□と↑） → 「ホーム画面に追加」</li>
+  <li>名前を確認 → 「追加」</li>
+</ol>
+
+<h3>Android（Chrome）</h3>
+<ol>
+  <li>Chrome で開く</li>
+  <li>右上の「⋮」メニュー → 「アプリをインストール」 または 「ホーム画面に追加」</li>
+</ol>
+
+<h3>PC（Chrome / Edge）</h3>
+<ol>
+  <li>URL バー右端のインストールアイコン（モニタに↓のマーク）をクリック</li>
+  <li>「インストール」</li>
+</ol>
+
+<div class="ok"><b>✓</b> インストール後はオフラインでもページのスケルトンが表示され、ネットワーク復帰時に自動同期されます（ただし打刻自体には認証サーバとの通信が必要）。</div>
+
+<!-- ========== 14. FAQ ========== -->
+<h2 id="faq">14. よくある質問・トラブル対応</h2>
+
+<h3>Q. 打刻ボタンが押せない（グレーアウト）</h3>
+<p>現在の状態と矛盾する打刻はできない仕様です。たとえば「勤務中」のときは出勤ボタンは押せません。状態を確認して、適切なボタンを押してください。</p>
+
+<h3>Q. 休憩終わりを押し忘れて退勤してしまった</h3>
+<p>その休憩は計上されません（未閉ペア）。<code>/admin</code>（manager / office）から該当日に <code>break_end</code> 打刻を追加してください。</p>
+
+<h3>Q. 退勤後にテレワークで仕事を再開したい</h3>
+<p>もう一度「出勤」ボタンを押せば、新しいセッションが始まります。退勤後の移動・休憩時間は労働時間に含まれません。</p>
+
+<h3>Q. 全員分ダウンロードしたファイルにアラートが出ない</h3>
+<p>アラートはサマリシートの「アラート」列と、各人シート上部の「⚠」行に出ます。Excel/Numbers 下部の<b>シートタブ</b>で切り替えて確認してください。</p>
+
+<h3>Q. 過去の月のデータを再計算したい</h3>
+<p><code>/attendance</code> でその月を選んで「📊 生成」を押すと「再生成して上書きしますか？」と聞かれます。OK で最新の打刻状態（<code>/admin</code> での手動補正含む）から再集計されます。</p>
+
+<h3>Q. 自分の表示名を変えたい</h3>
+<p><code>/settings</code> の「表示名」欄を変えて「保存」。即時反映されます。</p>
+
+<h3>Q. 同じメールで二重登録できますか？</h3>
+<p>いいえ。1メール1アカウントです。ログインで使ってください。</p>
+
+<h3>Q. パスワードを忘れた</h3>
+<p>現バージョンにはパスワードリセット機能がありません。<span class="role role-office">office</span> に Firebase コンソールでパスワードリセットメールを送ってもらってください。</p>
+
+<h3>Q. 打刻データが他人に見えるのは問題ない？</h3>
+<p>社内利用前提のため、認証済みユーザーは全員の打刻状況を閲覧できます。これは「誰がいつ来てるか」を全員で見える化するための仕様です。外部公開は禁止。</p>
+
+<h3>Q. オフラインでも打刻できる？</h3>
+<p>打刻には認証＋RTDB通信が必要です。完全オフライン状態では失敗します。Wi-Fi が不安定な場合は復帰後に再度試してください。</p>
+
+<h3>Q. ボタンが反応しない / 表示が古い</h3>
+<p>Service Worker のキャッシュが原因の場合があります。ブラウザで「ハードリロード」（Ctrl+Shift+R / Cmd+Shift+R）を試してください。</p>
+
+<!-- ========== 15. データ構造 ========== -->
+<h2 id="data">15. データ構造（参考）</h2>
+
+<p>Firebase Realtime Database のツリー構造です。技術担当者向けの参考情報。</p>
+
+<pre>users/{uid}                プロフィール: name, email, role(staff|manager|office), color_index, created_at, updated_at
+meta/firstOfficeUid        最初に登録した office の uid（不変、role validate 用）
+employees/{empId}          社員マスタ: name, dept, workNo, empNo, active
+punches/{pushId}           打刻ログ（追記専用）:
+                             employeeId, employeeName, employeeDept,
+                             type ∈ { in | out | break_start | break_end },
+                             timestamp(ServerValue.TIMESTAMP),
+                             dateKey "YYYY-MM-DD",
+                             periodKey "YYYY-MM-H1|H2",
+                             deviceUid, deviceLabel
+editLogs/{pushId}          打刻修正履歴（manager/office のみ書込）:
+                             targetPunchId, beforeValue, afterValue,
+                             reason, editedBy, editedByEmail, editedAt
+attendance/months/{YM}     社労士書類生成のキャッシュ: records, edits, filename, year, month
+periods/{periodKey}        将来用（現在は未使用）
+devices/{uid}              端末ラベル（任意）</pre>
+
+<h3>権限ルール（要約）</h3>
+<ul>
+  <li><code>users</code>: 自分の doc は本人のみ書込、role 変更は office のみ（自分自身は不可）</li>
+  <li><code>meta/firstOfficeUid</code>: 一度書き込まれたら不変</li>
+  <li><code>employees</code>: 全員読込可、書込は office のみ</li>
+  <li><code>punches</code>: 全員読込可、書込は本人 + サーバー時刻一致が必須（manager/office は時刻自由）</li>
+  <li><code>editLogs</code>: manager/office のみ読み書き、追加のみ（更新・削除不可）</li>
+  <li><code>attendance/*</code>: office のみ読み書き</li>
+</ul>
+
+<h3>サーバー時刻の改ざん耐性</h3>
+<p>一般ユーザー（staff）の打刻は <code>timestamp === now</code> を <code>.validate</code> ルールで検証しているため、過去・未来時刻の偽装は不可能です。<code>/admin</code> での手動修正は manager/office のみ可能で、必ず <code>editLogs</code> に before/after が記録されます。</p>
+
+<hr style="margin:48px 0 16px;border:none;border-top:1px solid #ddd;">
+<p style="font-size:11px;color:#888;text-align:center;">© rivan group / みんなの出勤簿 — このマニュアルは <code>docs/manual.html</code> として管理されています。最新版は <code>https://github.com/lifdubhsliuhsf/minna-shukkinbo</code> を参照してください。</p>
+
+</div>
+
+</body>
+</html>
