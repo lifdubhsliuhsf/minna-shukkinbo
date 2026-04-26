@@ -2,679 +2,1478 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>みんなの出勤簿 — 操作マニュアル</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>みんなの出勤簿 取扱説明書</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=BIZ+UDPMincho:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* ===== ベース ===== */
-  * { box-sizing: border-box; }
-  html { font-size: 14px; }
-  body {
-    font-family: -apple-system, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
-    color: #111;
-    background: #f9fafb;
-    margin: 0;
-    line-height: 1.7;
-  }
-  .page {
-    max-width: 880px;
-    margin: 0 auto;
-    background: #fff;
-    padding: 48px 56px 64px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-  }
+:root {
+  --paper: #f5f1e8; --paper-deep: #ece5d3; --paper-soft: #faf7ef;
+  --ink: #1d1b17; --ink-soft: #4a463d; --ink-faint: #8a8473;
+  --rule: #d9d1bc; --rule-soft: #e6dfcc;
+  --c-red: #e74c3c; --c-red-bg: #fdecea;
+  --c-blue: #2e86de; --c-blue-bg: #e8f0fe;
+  --c-green: #27ae60; --c-green-bg: #e6f5ec;
+  --c-orange: #f39c12; --c-orange-bg: #fef5e0;
+  --c-violet: #4527a0; --c-violet-bg: #ede7f6;
+  --c-cyan: #0891b2; --c-cyan-bg: #cffafe;
+  --accent: #8b2c2c; --accent-soft: #c8623f;
+  --warn-red: #b7351a; --warn-amber: #c9791a;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  font-size: 15px; line-height: 1.85; font-feature-settings: "palt";
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(139, 44, 44, 0.02) 0%, transparent 30%),
+    radial-gradient(circle at 85% 70%, rgba(139, 44, 44, 0.02) 0%, transparent 40%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.08  0 0 0 0.06 0'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.5'/></svg>");
+}
+.mincho { font-family: "BIZ UDPMincho", "Yu Mincho", "Hiragino Mincho ProN", serif; font-feature-settings: "palt"; }
+.mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+h1, h2, h3, h4 { font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-weight: 700; letter-spacing: 0.01em; color: var(--ink); }
+p { margin: 0 0 1em; }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.page { max-width: 1000px; margin: 0 auto; padding: 0 28px; }
 
-  /* ===== タイポグラフィ ===== */
-  h1 {
-    font-size: 28px; margin: 0 0 6px;
-    border-bottom: 3px solid #111;
-    padding-bottom: 12px;
-  }
-  h1 + .subtitle { color: #666; font-size: 14px; margin: 0 0 32px; }
-  h2 {
-    font-size: 20px;
-    margin: 48px 0 14px;
-    padding: 8px 12px;
-    background: #111;
-    color: #fff;
-    border-radius: 4px;
-  }
-  h3 {
-    font-size: 16px;
-    margin: 28px 0 10px;
-    border-left: 4px solid #111;
-    padding-left: 10px;
-  }
-  h4 { font-size: 14px; margin: 18px 0 6px; color: #333; }
-  p { margin: 0 0 12px; }
-  ul, ol { margin: 0 0 14px; padding-left: 22px; }
-  li { margin-bottom: 4px; }
-  code {
-    background: #f1f5f9;
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.92em;
-  }
-  pre {
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    padding: 12px 14px;
-    overflow-x: auto;
-    font-size: 12px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    line-height: 1.5;
-  }
+/* COVER */
+.cover {
+  min-height: 100vh; padding: 72px 28px 80px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; border-bottom: 1px solid var(--rule);
+  background: linear-gradient(180deg, var(--paper-soft) 0%, var(--paper) 100%);
+  overflow: hidden;
+}
+.cover::before { content: ""; position: absolute; inset: 16px; border: 1px solid var(--rule); pointer-events: none; }
+.cover::after { content: ""; position: absolute; inset: 22px; border: 1px solid var(--rule-soft); pointer-events: none; }
+.cover-inner { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; width: 100%; }
+.cover-top { display: flex; justify-content: space-between; align-items: flex-start; font-size: 13px; letter-spacing: 0.15em; color: var(--ink-faint); font-weight: 500; }
+.cover-top .stamp { display: inline-block; padding: 8px 16px; border: 1.5px solid var(--accent); color: var(--accent); letter-spacing: 0.2em; font-weight: 700; font-size: 14px; }
+.cover-heading { margin-top: 14vh; }
+.cover-kicker { font-size: 14px; letter-spacing: 0.35em; color: var(--ink-soft); margin-bottom: 20px; padding-left: 2px; font-weight: 600; }
+.cover-title { font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: clamp(52px, 9vw, 96px); line-height: 1; font-weight: 800; letter-spacing: 0.02em; margin: 0; }
+.cover-title .dot { color: var(--accent); }
+.cover-sub { font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: clamp(18px, 2.2vw, 22px); color: var(--ink-soft); margin-top: 28px; max-width: 560px; line-height: 1.7; }
+.cover-phone {
+  position: absolute; right: 7%; top: 14%; width: 220px;
+  transform: rotate(6deg); z-index: 0; opacity: 0.92;
+  filter: drop-shadow(0 30px 60px rgba(29,27,23,0.2));
+}
+@media (max-width: 720px) { .cover-phone { display: none; } }
+.cover-meta { margin-top: 6vh; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; font-size: 13px; border-top: 1px solid var(--rule); padding-top: 22px; }
+.cover-meta dt { color: var(--ink-faint); font-size: 12px; letter-spacing: 0.12em; margin-bottom: 6px; font-weight: 600; }
+.cover-meta dd { margin: 0; font-weight: 600; font-size: 15px; color: var(--ink); }
 
-  /* ===== ボックス ===== */
-  .note, .warn, .ok {
-    border-left: 4px solid;
-    padding: 10px 14px;
-    margin: 14px 0;
-    border-radius: 0 4px 4px 0;
-    font-size: 13px;
-  }
-  .note { background: #eff6ff; border-color: #3b82f6; }
-  .warn { background: #fef3c7; border-color: #f59e0b; }
-  .ok   { background: #ecfdf5; border-color: #10b981; }
-  .note b, .warn b, .ok b { display: inline-block; margin-right: 6px; }
+/* SECTIONS */
+section { padding: 80px 0 40px; border-bottom: 1px solid var(--rule); }
+section:last-of-type { border-bottom: none; }
+.section-num { font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 15px; letter-spacing: 0.2em; color: var(--accent); display: flex; align-items: center; gap: 14px; margin-bottom: 18px; font-weight: 600; }
+.section-num::before { content: ""; width: 36px; height: 1px; background: var(--accent); }
+h2.sec { font-size: clamp(32px, 4.5vw, 44px); line-height: 1.25; margin: 0 0 14px; font-weight: 800; max-width: 720px; }
+.lede { font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 18px; line-height: 2; color: var(--ink); max-width: 680px; margin: 0 0 36px; padding-left: 20px; border-left: 3px solid var(--accent); font-weight: 500; }
+h3 { font-size: 24px; margin: 44px 0 14px; line-height: 1.45; }
+h4 { font-size: 17px; margin: 22px 0 10px; letter-spacing: 0.02em; }
+small.note { font-size: 13px; color: var(--ink-faint); letter-spacing: 0.03em; font-weight: 500; }
 
-  /* ===== 表 ===== */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0;
-    font-size: 13px;
-  }
-  th, td {
-    border: 1px solid #d1d5db;
-    padding: 6px 10px;
-    text-align: left;
-    vertical-align: top;
-  }
-  th { background: #f3f4f6; font-weight: 700; }
-  td.center, th.center { text-align: center; }
+/* TOC */
+.toc { padding: 50px 0 80px; max-width: 720px; margin: 0 auto; }
+.toc h2 { font-size: 14px; letter-spacing: 0.2em; color: var(--ink-soft); font-weight: 600; margin: 0 0 22px; font-family: "BIZ UDPMincho", "Yu Mincho", serif; }
+.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: toc; }
+.toc li { counter-increment: toc; display: flex; align-items: baseline; gap: 14px; padding: 14px 0; border-bottom: 1px dashed var(--rule); }
+.toc li::before { content: counter(toc, decimal-leading-zero); font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 15px; color: var(--accent); width: 36px; flex-shrink: 0; letter-spacing: 0.05em; font-weight: 700; }
+.toc li .fill { flex: 1; border-bottom: 1px dotted var(--rule); margin: 0 8px; transform: translateY(-4px); }
+.toc li .pg { font-family: "BIZ UDPMincho", "Yu Mincho", serif; color: var(--ink-soft); font-size: 14px; font-weight: 500; }
+.toc a { color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15px; }
+.toc a:hover { color: var(--accent); }
 
-  /* ===== 役割バッジ ===== */
-  .role { display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: 11px; font-weight: 700; }
-  .role-staff   { background: #f3f4f6; color: #374151; }
-  .role-manager { background: #dbeafe; color: #1e40af; }
-  .role-office  { background: #ede9fe; color: #5b21b6; }
+/* STEP LIST */
+.steps { counter-reset: step; list-style: none; padding: 0; margin: 24px 0 32px; }
+.steps > li { counter-increment: step; position: relative; padding: 18px 22px 18px 72px; background: var(--paper-soft); border: 1px solid var(--rule); margin-bottom: 10px; border-radius: 2px; }
+.steps > li::before { content: counter(step); position: absolute; left: 20px; top: 16px; font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 32px; font-weight: 700; color: var(--accent); line-height: 1; }
+.steps > li::after { content: ""; position: absolute; left: 54px; top: 20px; bottom: 20px; width: 1px; background: var(--rule); }
+.steps > li strong { display: block; font-size: 16px; margin-bottom: 6px; font-weight: 700; color: var(--ink); }
+.steps > li .hint { display: block; font-size: 14px; color: var(--ink-soft); margin-top: 6px; line-height: 1.75; }
 
-  /* ===== ボタン擬似 ===== */
-  .btn-mock {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 12px;
-    margin: 0 2px;
-    color: #fff;
-  }
-  .btn-in    { background: #16a34a; }
-  .btn-out   { background: #dc2626; }
-  .btn-break { background: #f59e0b; }
-  .btn-bend  { background: #0891b2; }
+/* CALLOUT */
+.callout { display: grid; grid-template-columns: auto 1fr; gap: 16px; padding: 20px 22px; margin: 24px 0; background: #fbf6e8; border: 1px solid #e0d199; border-left: 4px solid var(--warn-amber); border-radius: 2px; }
+.callout.tip { background: #eef2ea; border-color: #c8d5b9; border-left-color: #5a7b3a; }
+.callout.warn { background: #fbe9e0; border-color: #e4b8a0; border-left-color: var(--warn-red); }
+.callout.info { background: #eaf0f6; border-color: #b6ccde; border-left-color: #2e5d82; }
+.callout .label { font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 13px; letter-spacing: 0.15em; color: var(--ink); writing-mode: vertical-rl; font-weight: 700; padding: 2px 4px; }
+.callout .body { font-size: 15px; line-height: 1.9; color: var(--ink); }
+.callout p:last-child { margin-bottom: 0; }
 
-  /* ===== TOC ===== */
-  .toc {
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    padding: 16px 22px;
-    margin: 0 0 32px;
-  }
-  .toc h3 { margin-top: 0; border: none; padding: 0; }
-  .toc ol { columns: 2; column-gap: 28px; padding-left: 18px; }
-  .toc li { break-inside: avoid; margin-bottom: 4px; font-size: 13px; }
-  .toc a { color: #1d4ed8; text-decoration: none; }
-  .toc a:hover { text-decoration: underline; }
+/* PHONE FRAME — pseudo-screen rendered via HTML/CSS */
+.phone-row {
+  display: grid; grid-template-columns: 300px 1fr;
+  gap: 36px; margin: 28px 0 40px; align-items: start;
+}
+.phone-row.reverse { grid-template-columns: 1fr 300px; }
+.phone-row.two { grid-template-columns: 300px 300px; justify-content: center; }
+@media (max-width: 800px) {
+  .phone-row, .phone-row.reverse, .phone-row.two { grid-template-columns: 1fr; gap: 24px; }
+  .phone-row.reverse > *:first-child { order: 2; }
+}
+.phone {
+  width: 100%; max-width: 300px;
+  padding: 12px 8px;
+  background: #1d1b17; border-radius: 34px;
+  box-shadow: 0 20px 40px -10px rgba(29,27,23,0.3), 0 2px 0 rgba(255,255,255,0.08) inset;
+  position: relative; justify-self: center;
+}
+.phone::before {
+  content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 90px; height: 18px; background: #1d1b17;
+  border-radius: 0 0 12px 12px; z-index: 2;
+}
+.phone-screen {
+  width: 100%; min-height: 540px; max-height: 580px;
+  border-radius: 22px; background: #f9fafb; overflow: hidden;
+  display: flex; flex-direction: column;
+  font-family: -apple-system, "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  font-size: 11.5px; color: #111;
+}
+.phone-label {
+  font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 11px;
+  letter-spacing: 0.2em; color: var(--ink-faint);
+  text-align: center; margin-top: 12px; text-transform: uppercase;
+}
+.phone-label strong { display: block; color: var(--ink); font-size: 14px; letter-spacing: 0.05em; margin-top: 4px; font-weight: 700; }
 
-  /* ===== 画面イメージ (擬似) ===== */
-  .screen {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background: #fff;
-    margin: 12px 0 18px;
-    overflow: hidden;
-    font-size: 12px;
-  }
-  .screen-header {
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 6px 10px;
-    font-weight: 700;
-  }
-  .screen-body { padding: 10px 12px; }
+/* mock screen (ms-*) — みんなの出勤簿 UI を擬似再現 */
+.ms-header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 12px; }
+.ms-header span.tiny { color: #888; font-size: 10px; font-weight: 400; }
+.ms-body { flex: 1; padding: 8px 10px; overflow: hidden; }
+.ms-body .lbl { color: #6b7280; font-size: 10px; font-weight: 700; margin: 4px 0 2px; }
+.ms-clock { font-size: 36px; font-weight: 900; text-align: center; font-family: ui-monospace, Menlo, monospace; line-height: 1.05; margin: 12px 0 4px; }
+.ms-date { text-align: center; color: #6b7280; font-size: 11px; margin: 0 0 12px; }
+.ms-select { background: #fff; border: 1.5px solid #d1d5db; border-radius: 8px; padding: 6px 8px; font-size: 13px; margin: 0 0 8px; display: flex; justify-content: space-between; }
+.ms-status { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; margin: 0 0 8px; }
+.ms-status .lbl2 { font-size: 9px; color: #6b7280; }
+.ms-status .val-working { color: #15803d; font-size: 14px; font-weight: 700; }
+.ms-status .val-onbreak { color: #b45309; font-size: 14px; font-weight: 700; }
+.ms-status .val-done    { color: #6b7280; font-size: 14px; font-weight: 700; }
+.ms-status .val-none    { color: #475569; font-size: 14px; font-weight: 700; }
+.ms-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ms-btn { padding: 14px 0; text-align: center; border-radius: 10px; font-size: 14px; font-weight: 800; color: #fff; letter-spacing: 0.04em; }
+.ms-btn.dim { opacity: 0.4; }
+.ms-btn.in    { background: #16a34a; }
+.ms-btn.out   { background: #dc2626; }
+.ms-btn.brk   { background: #f59e0b; }
+.ms-btn.bend  { background: #0891b2; }
+.ms-btn.brk.act { background: #b45309; box-shadow: inset 0 0 0 2px #fde68a; }
+.ms-btn.bend.act { background: #155e75; box-shadow: inset 0 0 0 2px #a5f3fc; }
 
-  /* 状態バッジ */
-  .badge {
-    display: inline-block; padding: 1px 8px; border-radius: 999px;
-    font-size: 11px; font-weight: 700;
-  }
-  .badge-working { background: #dcfce7; color: #14532d; }
-  .badge-break   { background: #fef3c7; color: #92400e; }
-  .badge-done    { background: #fee2e2; color: #7f1d1d; }
-  .badge-none    { background: #f1f5f9; color: #64748b; }
+.ms-tbl { width: 100%; border-collapse: collapse; font-size: 10px; margin: 6px 0; }
+.ms-tbl th { background: #f3f4f6; padding: 4px 6px; text-align: left; color: #6b7280; font-weight: 700; font-size: 9px; }
+.ms-tbl td { padding: 4px 6px; border-top: 1px solid #f1f5f9; }
+.ms-tbl .pill { display: inline-block; padding: 0 6px; border-radius: 999px; font-size: 9px; font-weight: 700; }
+.ms-tbl .pill.in   { background: #dcfce7; color: #14532d; }
+.ms-tbl .pill.out  { background: #fee2e2; color: #7f1d1d; }
+.ms-tbl .pill.brk  { background: #fef3c7; color: #92400e; }
 
-  /* ===== 印刷スタイル ===== */
-  @media print {
-    @page { size: A4; margin: 16mm 14mm; }
-    html, body { background: #fff; }
-    .page {
-      box-shadow: none;
-      padding: 0;
-      max-width: none;
-    }
-    .no-print { display: none !important; }
-    h2 { break-before: page; }
-    h2:first-of-type { break-before: avoid; }
-    h3, h4 { break-after: avoid; }
-    pre, table, .screen, .note, .warn, .ok { break-inside: avoid; }
-    a { color: inherit; text-decoration: none; }
-    .toc ol { columns: 1; }
-  }
+.ms-bnav { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid #e5e7eb; background: #fff; padding: 4px 0; font-size: 14px; text-align: center; }
+.ms-bnav span { padding: 4px 0; color: #9ca3af; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ms-bnav span small { font-size: 8px; color: #9ca3af; font-weight: 600; }
+.ms-bnav span.active { color: #111; font-weight: 800; }
+.ms-bnav span.active small { color: #111; }
 
-  /* ===== 印刷用ボタン (画面でのみ表示) ===== */
-  .print-bar {
-    position: sticky; top: 0; z-index: 50;
-    background: #111; color: #fff;
-    padding: 8px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-    box-shadow: 0 2px 8px rgba(0,0,0,.2);
-  }
-  .print-bar button {
-    background: #fff; color: #111;
-    border: 0; padding: 6px 14px; border-radius: 4px;
-    font-weight: 700; cursor: pointer; font-size: 13px;
-  }
-  .print-bar button:hover { background: #fbbf24; }
+.ms-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; margin: 0 0 8px; font-size: 11px; }
+.ms-card .ttl { font-size: 10px; color: #6b7280; font-weight: 700; }
+.ms-card .num { font-size: 18px; font-weight: 800; }
+.ms-quad { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 6px 0; }
+.ms-period-cell {
+  font-size: 9px; padding: 4px; border: 1px solid #e5e7eb;
+  text-align: center; line-height: 1.3;
+}
+.ms-period-cell.present { background: #dcfce7; }
+.ms-period-cell.warn    { background: #fef3c7; }
+.ms-period-cell.sun     { background: #fee2e2; }
+.ms-period-cell.sat     { background: #dbeafe; }
+
+/* PALETTE (ロール色) */
+.palette { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 24px 0; }
+@media (max-width: 640px) { .palette { grid-template-columns: 1fr; } }
+.swatch { padding: 18px; border: 1px solid var(--rule); background: var(--paper-soft); }
+.swatch .role-lbl { font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 11px; letter-spacing: 0.2em; color: var(--accent); margin-bottom: 6px; font-weight: 700; }
+.swatch .role-name { font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+.swatch .role-desc { font-size: 13px; color: var(--ink-soft); line-height: 1.7; }
+
+/* STATUS PILLS */
+.status-row { display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+.status-pill { flex: 1; min-width: 80px; padding: 10px 14px; text-align: center; border: 1px solid var(--rule); font-size: 14px; font-weight: 700; border-radius: 4px; background: #fff; }
+.status-pill.working { background: #dcfce7; color: #14532d; border-color: #86efac; }
+.status-pill.onbreak { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.status-pill.done    { background: #fee2e2; color: #7f1d1d; border-color: #fecaca; }
+.status-pill.none    { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+
+/* FLOW (state machine) */
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 14px; align-items: center; margin: 28px 0; padding: 24px; background: var(--paper-soft); border: 1px solid var(--rule); }
+.flow-box { padding: 14px 10px; background: #fff; border-radius: 4px; text-align: center; border: 1px solid var(--rule); font-weight: 700; font-size: 14px; }
+.flow-arrow { font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 32px; color: var(--accent); line-height: 1; text-align: center; }
+.flow-arrow .sub { display: block; font-size: 11px; color: var(--accent); letter-spacing: 0.1em; margin-top: 4px; font-family: "BIZ UDPGothic", sans-serif; font-weight: 700; }
+@media (max-width: 720px) { .flow { grid-template-columns: 1fr; } .flow-arrow { transform: rotate(90deg); margin: 6px auto; } }
+
+/* TABLE */
+table.ref { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+table.ref th, table.ref td { border: 1px solid var(--rule); padding: 8px 12px; text-align: left; vertical-align: top; }
+table.ref th { background: var(--paper-soft); font-weight: 700; }
+table.ref td.center, table.ref th.center { text-align: center; }
+
+/* ANNOTATION (numbered red circles) */
+.annot-list { list-style: none; padding: 0; margin: 0; counter-reset: annot; }
+.annot-list > li {
+  counter-increment: annot; position: relative;
+  padding: 14px 0 14px 54px; font-size: 15px;
+  line-height: 1.85; border-bottom: 1px dashed var(--rule-soft); color: var(--ink);
+}
+.annot-list > li::before {
+  content: counter(annot); position: absolute; left: 0; top: 14px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-family: "BIZ UDPMincho", "Yu Mincho", serif;
+  font-weight: 700; text-align: center; line-height: 36px;
+  font-size: 17px; box-shadow: 0 3px 8px rgba(139,44,44,0.3);
+}
+.annot-list > li strong { display: block; margin-bottom: 4px; font-weight: 700; font-size: 15.5px; }
+.annot-list > li small { display: block; font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+
+/* FAQ */
+.faq { margin: 28px 0; }
+.faq details { border: 1px solid var(--rule); padding: 14px 18px; margin-bottom: 8px; background: var(--paper-soft); border-radius: 2px; }
+.faq summary { cursor: pointer; font-weight: 700; font-size: 16px; list-style: none; display: flex; align-items: flex-start; gap: 14px; color: var(--ink); }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::before { content: "Q."; font-family: "BIZ UDPMincho", "Yu Mincho", serif; color: var(--accent); font-size: 20px; flex-shrink: 0; line-height: 1.3; font-weight: 700; }
+.faq .answer { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--rule); font-size: 15px; color: var(--ink); display: flex; gap: 14px; line-height: 1.85; }
+.faq .answer::before { content: "A."; font-family: "BIZ UDPMincho", "Yu Mincho", serif; color: var(--ink-soft); font-size: 20px; flex-shrink: 0; line-height: 1.3; font-weight: 700; }
+.faq .answer > div { flex: 1; }
+.faq .answer p:last-child { margin-bottom: 0; }
+
+/* CODE / KBD / MARK */
+.kbd { font-family: "IBM Plex Mono", monospace; font-size: 13px; padding: 3px 8px; background: #fff; border: 1px solid var(--rule); border-radius: 2px; color: var(--ink); font-weight: 500; }
+mark { background: linear-gradient(180deg, transparent 62%, rgba(139,44,44,0.18) 62%); color: inherit; padding: 0 2px; }
+pre.code { background: #1d1b17; color: #e8e2cf; padding: 14px 18px; border-radius: 4px; font-family: "IBM Plex Mono", monospace; font-size: 12.5px; line-height: 1.7; overflow-x: auto; }
+
+/* QRC FOOTER (URL access) */
+.qrc { background: var(--ink); color: var(--paper); padding: 44px 36px; margin: 40px -28px 0; border-top: 4px double var(--accent); }
+.qrc h2 { color: var(--paper); font-size: 15px; letter-spacing: 0.2em; margin: 0 0 24px; font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-weight: 600; }
+.qrc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+.qrc-grid h4 { color: var(--paper); font-size: 14px; letter-spacing: 0.1em; border-bottom: 1px solid rgba(245,241,232,0.3); padding-bottom: 8px; margin: 0 0 12px; font-weight: 700; }
+.qrc-grid ul { list-style: none; padding: 0; margin: 0; font-size: 14px; color: #ebe5d2; line-height: 2; }
+.qrc-grid .icon { display: inline-block; width: 20px; color: #c8623f; }
+
+/* FOOTER */
+footer.end { padding: 60px 28px 80px; text-align: center; font-family: "BIZ UDPMincho", "Yu Mincho", serif; color: var(--ink-soft); font-size: 13px; letter-spacing: 0.1em; background: var(--paper-deep); border-top: 1px solid var(--rule); font-weight: 500; }
+footer.end .seal { display: inline-block; width: 64px; height: 64px; border: 2px solid var(--accent); color: var(--accent); border-radius: 50%; line-height: 60px; font-size: 14px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 14px; }
+
+/* UTIL */
+.usecase { font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 14px; letter-spacing: 0.15em; color: var(--accent); font-weight: 700; display: block; margin: 32px 0 8px; padding-bottom: 5px; border-bottom: 1.5px solid var(--accent); width: fit-content; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 24px 0; }
+@media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+.two-col h4 { margin-top: 0; }
+
+/* ROLE BADGE */
+.rb { display: inline-block; padding: 1px 8px; border-radius: 3px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
+.rb-staff   { background: #f3f4f6; color: #374151; }
+.rb-manager { background: #dbeafe; color: #1e40af; }
+.rb-office  { background: #ede9fe; color: #5b21b6; }
+
+/* PRINT */
+@media print {
+  body { background: #fff; }
+  .cover { min-height: auto; page-break-after: always; }
+  section { page-break-inside: avoid; padding: 30px 0; }
+  .phone-row, .phone-row.reverse { grid-template-columns: 240px 1fr !important; gap: 24px; }
+  .phone-row.two { grid-template-columns: 240px 240px !important; gap: 24px; justify-content: center; }
+  .phone-row.reverse > *:first-child { order: 0; }
+  .phone { max-width: 240px; }
+  .phone-screen { min-height: 440px; max-height: 480px; }
+  .toc li { break-inside: avoid; }
+  .no-print { display: none !important; }
+  a { color: inherit; }
+}
+
+/* PRINT BAR (画面のみ) */
+.print-bar {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--ink); color: var(--paper);
+  padding: 6px 18px; display: flex; align-items: center; justify-content: space-between;
+  font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 12px; letter-spacing: 0.15em;
+}
+.print-bar button {
+  background: var(--paper); color: var(--ink); border: 0;
+  padding: 5px 14px; border-radius: 2px; cursor: pointer; font-weight: 700;
+  font-family: "BIZ UDPMincho", "Yu Mincho", serif; font-size: 12px; letter-spacing: 0.1em;
+}
+.print-bar button:hover { background: var(--accent-soft); color: #fff; }
 </style>
 </head>
 <body>
 
 <div class="print-bar no-print">
-  <span>📘 みんなの出勤簿 操作マニュアル</span>
-  <button onclick="window.print()">🖨 印刷 / PDF保存</button>
+  <span>みんなの出勤簿 取扱説明書</span>
+  <button onclick="window.print()">印刷 ／ PDF 保存</button>
 </div>
 
-<div class="page">
+<!-- ============ COVER ============ -->
+<div class="cover">
+  <div class="cover-inner">
+    <div class="cover-top">
+      <span>VER. 1.0 &nbsp; / &nbsp; 2026</span>
+      <span class="stamp">取扱説明書</span>
+    </div>
 
-<h1>みんなの出勤簿 — 操作マニュアル</h1>
-<p class="subtitle">本書は <code>https://attendance-app-b047c.web.app</code> で稼働する勤怠 PWA「みんなの出勤簿」の操作手順書です。最終更新 2026-04-26 / 対象バージョン v8 (sw cache key)</p>
+    <div class="cover-heading">
+      <div class="cover-kicker">MINNA NO SHUKKINBO</div>
+      <h1 class="cover-title">みんなの<br>出勤簿<span class="dot">.</span></h1>
+      <p class="cover-sub">
+        打刻 → 集計 → 社労士提出。<br>
+        勤怠まわりの一日を、ひとつのブラウザに収めるためのアプリ。
+      </p>
+    </div>
 
-<div class="toc no-print-toc">
-  <h3>目次</h3>
-  <ol>
-    <li><a href="#intro">1. はじめに / 全体像</a></li>
-    <li><a href="#roles">2. ロール（権限）</a></li>
-    <li><a href="#setup">3. 初回セットアップ</a></li>
-    <li><a href="#auth">4. ログイン / 新規登録</a></li>
-    <li><a href="#punch">5. 打刻（/punch）</a></li>
-    <li><a href="#today">6. 本日の打刻一覧（/today）</a></li>
-    <li><a href="#period">7. 期間集計（/period）</a></li>
-    <li><a href="#admin">8. 打刻管理（/admin）</a></li>
-    <li><a href="#employees">9. 社員マスタ（/employees）</a></li>
-    <li><a href="#attendance">10. 社労士書類生成（/attendance）</a></li>
-    <li><a href="#settings">11. 設定（/settings）</a></li>
-    <li><a href="#calc">12. 実働時間の計算ルール</a></li>
-    <li><a href="#pwa">13. ホーム画面に追加（PWA）</a></li>
-    <li><a href="#faq">14. よくある質問・トラブル対応</a></li>
-    <li><a href="#data">15. データ構造（参考）</a></li>
-  </ol>
-</div>
+    <dl class="cover-meta">
+      <div><dt>対象</dt><dd>店舗スタッフ・現場担当者・事務員</dd></div>
+      <div><dt>内容</dt><dd>打刻から月次xlsx出力までの操作手順</dd></div>
+      <div><dt>読むのにかかる時間</dt><dd>約 12 分</dd></div>
+    </dl>
+  </div>
 
-<!-- ========== 1. はじめに ========== -->
-<h2 id="intro">1. はじめに / 全体像</h2>
-
-<p><b>みんなの出勤簿</b> は、ブラウザで打刻 → 期間ごとの実働集計 → 社労士提出用の出勤簿 xlsx 生成 までを一つにまとめた PWA（プログレッシブ Web アプリ）です。Firebase の無料プランで稼働しています。</p>
-
-<h3>主な機能</h3>
-<ul>
-  <li><b>打刻（出勤・退勤・休憩・休憩終わり）</b>：ブラウザの大型ボタンで記録</li>
-  <li><b>本日の打刻一覧</b>：誰が今勤務中／休憩中／退勤済みかを一目で確認</li>
-  <li><b>期間集計</b>：月2回制（1〜15日 / 16〜末）の出勤マトリクス表示・CSV 出力</li>
-  <li><b>打刻管理</b>：打刻漏れの追加・修正・削除（履歴を <code>editLogs</code> に残す）</li>
-  <li><b>社員マスタ</b>：氏名・部門・社員番号の管理</li>
-  <li><b>社労士書類生成</b>：1か月分の出勤簿 xlsx を自動生成（残業・深夜・週40h アラート付き）</li>
-  <li><b>設定</b>：自分の表示名変更・ユーザー権限の管理</li>
-</ul>
-
-<h3>画面構成（ボトムナビ）</h3>
-<table>
-<thead><tr><th class="center">アイコン</th><th>パス</th><th>機能</th><th>必要権限</th></tr></thead>
-<tbody>
-<tr><td class="center">⏰</td><td><code>/punch</code></td><td>打刻キオスク</td><td><span class="role role-staff">staff</span> 以上</td></tr>
-<tr><td class="center">📋</td><td><code>/today</code></td><td>本日の打刻一覧</td><td><span class="role role-staff">staff</span> 以上</td></tr>
-<tr><td class="center">📅</td><td><code>/period</code></td><td>期間集計（H1/H2）</td><td><span class="role role-staff">staff</span> 以上</td></tr>
-<tr><td class="center">🔧</td><td><code>/admin</code></td><td>打刻編集</td><td><span class="role role-manager">manager</span> 以上</td></tr>
-<tr><td class="center">📊</td><td><code>/attendance</code></td><td>社労士書類生成</td><td><span class="role role-office">office</span> のみ</td></tr>
-<tr><td class="center">👥</td><td><code>/employees</code></td><td>社員マスタ管理</td><td><span class="role role-office">office</span> のみ</td></tr>
-<tr><td class="center">⚙️</td><td><code>/settings</code></td><td>プロフィール / 権限管理</td><td><span class="role role-staff">staff</span> 以上</td></tr>
-</tbody>
-</table>
-
-<!-- ========== 2. ロール ========== -->
-<h2 id="roles">2. ロール（権限）</h2>
-
-<p>権限は3層あります。最初に新規登録した人が自動的に <span class="role role-office">office</span> に昇格し、それ以降は全員 <span class="role role-staff">staff</span> として登録されます。<span class="role role-office">office</span> が必要に応じて <span class="role role-manager">manager</span> や <span class="role role-office">office</span> に昇格させてください。</p>
-
-<table>
-<thead>
-  <tr>
-    <th>操作</th>
-    <th class="center"><span class="role role-staff">staff</span></th>
-    <th class="center"><span class="role role-manager">manager</span></th>
-    <th class="center"><span class="role role-office">office</span></th>
-  </tr>
-</thead>
-<tbody>
-  <tr><td>打刻（出勤・退勤・休憩）</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
-  <tr><td>本日一覧 / 期間集計の閲覧</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
-  <tr><td>期間 CSV ダウンロード</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
-  <tr><td>自分の表示名変更</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
-  <tr><td>打刻の追加・修正・削除（<code>/admin</code>）</td><td class="center">−</td><td class="center">✓</td><td class="center">✓</td></tr>
-  <tr><td><code>editLogs</code>（修正履歴）の閲覧</td><td class="center">−</td><td class="center">✓</td><td class="center">✓</td></tr>
-  <tr><td>社員マスタの編集（<code>/employees</code>）</td><td class="center">−</td><td class="center">−</td><td class="center">✓</td></tr>
-  <tr><td>社労士書類の生成（<code>/attendance</code>）</td><td class="center">−</td><td class="center">−</td><td class="center">✓</td></tr>
-  <tr><td>ユーザーの role 変更</td><td class="center">−</td><td class="center">−</td><td class="center">✓</td></tr>
-</tbody>
-</table>
-
-<div class="warn"><b>⚠</b> <code>office</code> は最低1人必要です。最後の <code>office</code> を <code>staff</code> に降格しようとするとブロックされます。</div>
-
-<!-- ========== 3. 初回セットアップ ========== -->
-<h2 id="setup">3. 初回セットアップ</h2>
-
-<ol>
-  <li><b>URL を開く</b>：<code>https://attendance-app-b047c.web.app</code></li>
-  <li><b>新規登録</b>：「新規登録はこちら」→ 表示名・メール・パスワードを入力 →「登録」</li>
-  <li>初回登録者は自動的に <span class="role role-office">office</span> になり、すぐ全機能にアクセス可能</li>
-  <li><b>社員マスタの確認</b>：<code>/employees</code> で 98 名のシード（上野／谷川…）が入っているか確認</li>
-  <li><b>他のスタッフを招待</b>：各自に「<code>/register</code> で登録してください」と案内</li>
-  <li>必要に応じて <code>/settings</code> でロールを <span class="role role-manager">manager</span> や <span class="role role-office">office</span> に昇格</li>
-</ol>
-
-<div class="note"><b>💡</b> キオスク端末（事務所共有 PC など）で打刻させたい場合は、その端末用の専用アカウントを作って <span class="role role-staff">staff</span> でログインしっぱなしにします。打刻時は氏名選択 + 出勤ボタンの2タップでOK。</div>
-
-<!-- ========== 4. ログイン / 新規登録 ========== -->
-<h2 id="auth">4. ログイン / 新規登録</h2>
-
-<h3>ログイン（<code>/login</code>）</h3>
-<ol>
-  <li>メールアドレスとパスワードを入力</li>
-  <li>「ログイン」をタップ</li>
-  <li>成功すれば自動的に <code>/punch</code> に遷移</li>
-</ol>
-
-<h3>新規登録（<code>/register</code>）</h3>
-<ol>
-  <li>表示名（田中太郎、〇〇店など）</li>
-  <li>メールアドレス</li>
-  <li>パスワード（6文字以上）と確認入力</li>
-  <li>「登録」をタップ</li>
-</ol>
-
-<div class="ok"><b>✓</b> 登録は誰でも可能ですが、初期権限は <span class="role role-staff">staff</span> です。社内利用を前提にしているため、URL は社外に出さないでください。</div>
-
-<!-- ========== 5. /punch ========== -->
-<h2 id="punch">5. 打刻（<code>/punch</code>）</h2>
-
-<h3>画面構成</h3>
-<div class="screen">
-  <div class="screen-header">⏰ 打刻</div>
-  <div class="screen-body">
-    <p style="margin:0 0 8px;">本日の打刻状況（一覧表）<span style="float:right;color:#666">勤務中 3 / 休憩 1 / 退勤済 5 / 全98名</span></p>
-    <p style="font-size:32px;font-weight:900;text-align:center;margin:8px 0;font-family:monospace;">10:23:45</p>
-    <p style="text-align:center;color:#666;font-size:11px;margin:0 0 10px;">2026/04/26 (日)</p>
-    <p style="margin:0 0 6px;font-size:11px;font-weight:700;">氏名を選択</p>
-    <p style="border:1px solid #d1d5db;padding:4px 8px;border-radius:4px;font-size:13px;margin:0 0 10px;">▼ 上野（代表）</p>
-    <p style="margin:0 0 6px;font-size:11px;color:#666;">現在の状態 → <span class="badge badge-working">勤務中</span></p>
-    <p style="text-align:center;margin:8px 0;">
-      <span class="btn-mock btn-in">出 勤</span>
-      <span class="btn-mock btn-out">退 勤</span><br>
-      <span class="btn-mock btn-break">休 憩</span>
-      <span class="btn-mock btn-bend">休憩終わり</span>
-    </p>
+  <div class="cover-phone">
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="ms-header">⏰ 打刻 <span class="tiny">向井</span></div>
+        <div class="ms-body">
+          <div class="ms-clock">10:23</div>
+          <div class="ms-date">2026/04/26 (日)</div>
+          <div class="ms-status"><div class="lbl2">現在の状態</div><div class="val-working">勤務中</div></div>
+          <div class="ms-btns">
+            <div class="ms-btn in dim">出 勤</div>
+            <div class="ms-btn out">退 勤</div>
+            <div class="ms-btn brk">休 憩</div>
+            <div class="ms-btn bend dim">休憩終わり</div>
+          </div>
+        </div>
+        <div class="ms-bnav">
+          <span class="active">⏰<small>打刻</small></span>
+          <span>📋<small>一覧</small></span>
+          <span>📅<small>期間</small></span>
+          <span>📊<small>社労士</small></span>
+          <span>⚙️<small>設定</small></span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>使い方</h3>
-<ol>
-  <li>セレクトボックスから氏名を選ぶ（前回選んだ人を覚えています）</li>
-  <li>「現在の状態」を確認 → 押せるボタンだけが有効化される</li>
-  <li>該当ボタンをタップ → 確認ダイアログで「OK」</li>
-  <li>下部の「本日の打刻履歴」に記録が即座に追加される</li>
-</ol>
-
-<h3>状態と押せるボタン</h3>
-<table>
-<thead><tr><th>現在の状態</th><th class="center">出勤</th><th class="center">退勤</th><th class="center">休憩</th><th class="center">休憩終わり</th><th>用途</th></tr></thead>
-<tbody>
-<tr><td><span class="badge badge-none">未出勤</span></td><td class="center">✓</td><td class="center">−</td><td class="center">−</td><td class="center">−</td><td>1日の最初</td></tr>
-<tr><td><span class="badge badge-working">勤務中</span></td><td class="center">−</td><td class="center">✓</td><td class="center">✓</td><td class="center">−</td><td>休憩入りまたは終業</td></tr>
-<tr><td><span class="badge badge-break">休憩中</span></td><td class="center">−</td><td class="center">✓ *</td><td class="center">−</td><td class="center">✓</td><td>業務再開 or 直帰</td></tr>
-<tr><td><span class="badge badge-done">退勤済み</span></td><td class="center">✓</td><td class="center">−</td><td class="center">−</td><td class="center">−</td><td>テレワーク再開</td></tr>
-</tbody>
-</table>
-<p style="font-size:12px;color:#666;">* 休憩中の直帰も可能（業務上やむを得ない場合の救済措置）</p>
-
-<h3>複数回の休憩・テレワーク再開に対応</h3>
-<p>1日に複数回 <b>休憩 → 休憩終わり</b> を押せば、それぞれ独立した休憩区間として記録され、実働時間から差し引かれます。</p>
-<p>退勤後に「テレワークで残務をこなす」場合は、もう一度 <b>出勤</b> ボタンを押してください。新しいセッションが始まり、その分の労働時間も合算されます（移動時間や休憩時間の隙間は実働に含まれません）。</p>
-
-<div class="note"><b>💡</b> 上部に常時表示される「本日の打刻状況」テーブルは全社員のリアルタイム状況です。新しい打刻があれば自動で更新されます。</div>
-
-<h3>本日の CSV ダウンロード</h3>
-<p>右上の「⇩ 本日CSV」ボタンで、本日の社員別の出勤・退勤・休憩・実働時間を CSV 形式でダウンロードできます（Excel で開けます）。</p>
-
-<!-- ========== 6. /today ========== -->
-<h2 id="today">6. 本日の打刻一覧（<code>/today</code>）</h2>
-
-<p>その日の全社員の打刻状況を一覧表で表示します。閲覧専用。</p>
-
-<table>
-<thead><tr><th>列</th><th>意味</th></tr></thead>
-<tbody>
-<tr><td>No</td><td>workNo（社員番号順表示用）</td></tr>
-<tr><td>氏名 / 部門</td><td>マスタから自動表示</td></tr>
-<tr><td>出勤</td><td>当日最初の <code>in</code> 打刻時刻</td></tr>
-<tr><td>退勤</td><td>当日最後の <code>out</code> 打刻時刻</td></tr>
-<tr><td>休憩</td><td>当日の休憩時間合計</td></tr>
-<tr><td>実働</td><td>退勤−出勤−休憩（マルチセッション対応）</td></tr>
-<tr><td>状態</td><td>勤 / 休 / 退 / 未</td></tr>
-</tbody>
-</table>
-
-<!-- ========== 7. /period ========== -->
-<h2 id="period">7. 期間集計（<code>/period</code>）</h2>
-
-<p>月2回制（H1: 1〜15日 / H2: 16〜末日）の集計画面。社員 × 日付のマトリクスで一目で把握できます。</p>
-
-<h3>画面の操作</h3>
-<ul>
-  <li><b>← 前期間 / 次期間 →</b>：期間を移動（URL の <code>?period=2026-04-H1</code> で固定可）</li>
-  <li><b>今期間</b>：現在の期間にジャンプ</li>
-  <li><b>⇩ CSV出力</b>：表示中の期間を CSV ダウンロード（社員ID／氏名／部門／日付／曜日／出勤／退勤／休憩h／実働h／備考）</li>
-</ul>
-
-<h3>サマリカード</h3>
-<ul>
-  <li><b>対象社員</b>：active な社員数</li>
-  <li><b>総打刻数</b>：期間内の打刻件数</li>
-  <li><b>未退勤(要対応)</b>：出勤打刻のみで退勤がない日（黄色セル）</li>
-  <li><b>合計実働(簡易)</b>：期間内の全社員実働時間合計</li>
-</ul>
-
-<h3>マトリクスの色分け</h3>
-<ul>
-  <li><b>緑</b>：通常勤務（出勤＋退勤）</li>
-  <li><b>黄</b>：打刻漏れ（出のみ／退のみ）— <code>/admin</code> で要修正</li>
-  <li><b>薄赤</b>：日曜日</li>
-  <li><b>薄青</b>：土曜日</li>
-  <li><b>—</b>：未出勤</li>
-</ul>
-
-<h3>セル内表記の例</h3>
-<pre>09:00
-18:00
-休1.0h     ← 休憩時間が記録されていれば表示</pre>
-
-<!-- ========== 8. /admin ========== -->
-<h2 id="admin">8. 打刻管理（<code>/admin</code>） <span class="role role-manager">manager</span> <span class="role role-office">office</span></h2>
-
-<p>打刻漏れの補正、誤打刻の修正、削除を行います。すべての操作は <code>editLogs</code> に履歴として残ります。</p>
-
-<h3>使い方</h3>
-<ol>
-  <li>社員と日付を選択</li>
-  <li>その日の打刻一覧が表示される</li>
-  <li><b>編集</b>：行右の「編集」 → モーダルで種別・日時・理由を入力 → 保存</li>
-  <li><b>削除</b>：行右の「削除」 → 理由を入力 → 確認</li>
-  <li><b>追加</b>：「+ 打刻を追加」ボタン → 新しい打刻をモーダルで入力</li>
-</ol>
-
-<div class="warn"><b>⚠</b> 修正・削除には <b>必ず理由</b> が必要です。これは法的監査に対応するための措置で、後から「何のために変えたのか」を追跡できるようにしています。</div>
-
-<h3>修正履歴の確認</h3>
-<p>ページ下部「<code>修正履歴（editLogs）最新30件</code>」を展開すると、誰が・いつ・何を・なぜ変更したかが見られます。</p>
-
-<!-- ========== 9. /employees ========== -->
-<h2 id="employees">9. 社員マスタ（<code>/employees</code>） <span class="role role-office">office</span></h2>
-
-<h3>追加</h3>
-<ol>
-  <li>上部「新規追加」セクションに No.・氏名・部門・社員番号を入力</li>
-  <li>「追加」 → <code>E099</code> のような連番 ID で登録される</li>
-</ol>
-
-<h3>編集</h3>
-<p>一覧の入力欄に直接タイプして編集 → フォーカスを外すと自動保存。</p>
-
-<h3>退職処理</h3>
-<p>「在籍」のチェックを外す → 打刻画面のドロップダウンから消える。打刻履歴は残るので過去データは無傷。</p>
-
-<h3>完全削除</h3>
-<p>右端の「削除」 → 確認後に <code>employees</code> から消える。打刻履歴は残ります（<code>punches</code> ツリーは独立）。</p>
-
-<!-- ========== 10. /attendance ========== -->
-<h2 id="attendance">10. 社労士書類生成（<code>/attendance</code>） <span class="role role-office">office</span></h2>
-
-<p>1か月分の出勤簿を、残業・深夜・週40h 集計付きで xlsx にまとめる画面。打刻データから自動生成するため、別途 Excel ファイルをアップロードする必要はありません。</p>
-
-<h3>生成手順</h3>
-<ol>
-  <li>「① 対象月を選んで生成」で対象月を選択（既定: 当月）</li>
-  <li>「📊 生成」をタップ</li>
-  <li><code>/punches</code> から自動集計 → 「② 過去の出勤簿」リストに追加 + サマリ表示</li>
-  <li>サマリ表で人ごとの労働時間・残業・深夜・アラートを確認</li>
-  <li>必要なら個人行右の「詳細」で日別の打刻と編集</li>
-  <li>右上「全員分ダウンロード (xlsx)」 → 1ファイル（複数シート）でダウンロード</li>
-</ol>
-
-<h3>ダウンロード xlsx の構成</h3>
-<p>1ファイルに複数のシートが入っています。Excel/Numbers 下部のシートタブで切り替えて閲覧してください。</p>
-<ul>
-  <li><b>サマリ</b>シート：作業番号・氏名・部門・総労働時間・総残業時間・総深夜時間・アラート（全員1行ずつ）</li>
-  <li><b>E001_上野</b>、<b>E002_谷川</b> ……：1人につき1シート。日別の打刻と労働時間、上部に集計アラート行</li>
-</ul>
-
-<h3>サマリのアラート列</h3>
-<table>
-<thead><tr><th>表示</th><th>意味</th></tr></thead>
-<tbody>
-<tr><td>月残業45h超</td><td>36協定の月45h上限を超過。要対応</td></tr>
-<tr><td>週40h超あり</td><td>その月のどこかで法定週40h超過</td></tr>
-<tr><td>日8h超あり</td><td>その月のどこかで法定日8h超過</td></tr>
-<tr><td>打刻漏れ</td><td>出勤か退勤の片方が欠けている日がある</td></tr>
-<tr><td>編集あり</td><td><code>/admin</code> から手動補正された行がある</td></tr>
-</tbody>
-</table>
-
-<h3>個人別シートの列</h3>
-<table>
-<thead><tr><th>列</th><th>説明</th></tr></thead>
-<tbody>
-<tr><td>日付</td><td>4/1(火) のような曜日付き表記</td></tr>
-<tr><td>出勤時間 / 退勤時間</td><td>その日の最初の出勤打刻 / 最後の退勤打刻</td></tr>
-<tr><td>休憩時間</td><td>休憩開始〜休憩終わり打刻ペアの合計（複数回対応）</td></tr>
-<tr><td>労働時間</td><td>退勤−出勤−休憩（マルチセッション対応）</td></tr>
-<tr><td>残業時間</td><td>労働時間 − 8h（負ならゼロ）</td></tr>
-<tr><td>深夜労働時間</td><td>22:00〜翌5:00 に該当する時間</td></tr>
-<tr><td>残業時間累計[週]</td><td>その週の月曜からの残業累計</td></tr>
-<tr><td>アラート</td><td>その日固有の警告（日8h超／週40h超／打刻漏れ／編集済 など）</td></tr>
-</tbody>
-</table>
-
-<h3>過去の出勤簿の再表示</h3>
-<p>「② 過去の出勤簿」リストから過去月をクリックすると、保存済みデータが表示されます。再生成は不要。</p>
-
-<h3>生成済み月の上書き</h3>
-<p>同じ月で再度「生成」を押すと、確認ダイアログ「再生成して上書きしますか？」が出ます。OK で最新の <code>/punches</code> から再集計されます（<code>/admin</code> の手動修正もそのまま反映）。</p>
-
-<!-- ========== 11. /settings ========== -->
-<h2 id="settings">11. 設定（<code>/settings</code>）</h2>
-
-<h3>自分のプロフィール</h3>
-<ul>
-  <li>表示名はいつでも変更可能</li>
-  <li>メール・権限・UID は表示のみ</li>
-</ul>
-
-<h3>ユーザー一覧（<span class="role role-office">office</span> のみ）</h3>
-<ul>
-  <li>登録順に全ユーザーが並ぶ</li>
-  <li>各人の右側のセレクトで <code>staff</code> / <code>manager</code> / <code>office</code> を切り替え</li>
-  <li>変更前に確認ダイアログが出る</li>
-  <li>自分自身のロール変更はできない（誤操作防止）</li>
-  <li>最後の <code>office</code> を降格しようとするとブロック</li>
-</ul>
-
-<h3>関連リンク</h3>
-<p>権限に応じて、各画面へのショートカットリンクが表示されます。</p>
-
-<!-- ========== 12. 計算ルール ========== -->
-<h2 id="calc">12. 実働時間の計算ルール</h2>
-
-<p>すべての画面で共通に使われている <code>computeWorkHours</code> 関数のロジックを説明します。</p>
-
-<h3>基本式</h3>
-<pre>実働時間 = (退勤 − 出勤) − Σ休憩時間</pre>
-<p>1日に複数の出勤／退勤がある場合（テレワーク再出勤など）は、各セッションごとに上記を算出して合計します。</p>
-
-<h3>状態走査アルゴリズム</h3>
-<p>打刻を時系列順に並べ、以下のルールで状態を更新しながら「勤務中」区間の合計を加算します。</p>
-<table>
-<thead><tr><th>現在状態</th><th>打刻</th><th>処理</th><th>新状態</th></tr></thead>
-<tbody>
-<tr><td>none / done</td><td>in</td><td>workStart 記録</td><td>working</td></tr>
-<tr><td>working</td><td>out</td><td>workMs += (now − workStart) / sessions++</td><td>done</td></tr>
-<tr><td>working</td><td>break_start</td><td>workMs += (now − workStart)</td><td>on_break</td></tr>
-<tr><td>on_break</td><td>break_end</td><td>breakMs += (now − breakStart)</td><td>working</td></tr>
-<tr><td>on_break</td><td>out</td><td>未閉休憩は計上せずセッション終了</td><td>done</td></tr>
-</tbody>
-</table>
-
-<h3>残業 / 深夜の判定</h3>
-<ul>
-  <li><b>日残業</b>: その日の労働時間 − 法定 8h（負ならゼロ）</li>
-  <li><b>週残業</b>: 月曜起点の週内累計が 40h を超えた分</li>
-  <li><b>月残業</b>: 月内合計が 45h（36協定上限）を超えるとアラート</li>
-  <li><b>深夜労働</b>: 22:00〜翌5:00 に該当する時間（前日 0:00 越し勤務にも対応）</li>
-</ul>
-
-<h3>休憩の扱い</h3>
-<p>旧仕様の「一律 0.75h（45分）控除」は廃止。<code>break_start</code> と <code>break_end</code> 打刻ペアから実時間を計上します。</p>
-
-<div class="note"><b>💡</b> 6時間未満勤務でも休憩を記録できます（労基法上は6時間未満は休憩義務なしですが、自由意思での記録は妨げません）。</div>
-
-<h3>未閉ペアの扱い</h3>
-<ul>
-  <li><b>退勤打刻なし</b>: その日の労働時間は「不明」扱い（黄色アラート）</li>
-  <li><b>休憩終わり打刻なし</b>: その休憩は計上せず、退勤時にセッション終了</li>
-  <li>いずれも <code>/admin</code> から手動補正可能（履歴は editLogs に残る）</li>
-</ul>
-
-<!-- ========== 13. PWA ========== -->
-<h2 id="pwa">13. ホーム画面に追加（PWA）</h2>
-
-<p>スマホ・タブレット・PC のホーム画面にアイコンを追加することで、ブラウザを開かずに直接起動できます。</p>
-
-<h3>iPhone / iPad（Safari）</h3>
-<ol>
-  <li>Safari で <code>https://attendance-app-b047c.web.app</code> を開く</li>
-  <li>下部の共有アイコン（□と↑） → 「ホーム画面に追加」</li>
-  <li>名前を確認 → 「追加」</li>
-</ol>
-
-<h3>Android（Chrome）</h3>
-<ol>
-  <li>Chrome で開く</li>
-  <li>右上の「⋮」メニュー → 「アプリをインストール」 または 「ホーム画面に追加」</li>
-</ol>
-
-<h3>PC（Chrome / Edge）</h3>
-<ol>
-  <li>URL バー右端のインストールアイコン（モニタに↓のマーク）をクリック</li>
-  <li>「インストール」</li>
-</ol>
-
-<div class="ok"><b>✓</b> インストール後はオフラインでもページのスケルトンが表示され、ネットワーク復帰時に自動同期されます（ただし打刻自体には認証サーバとの通信が必要）。</div>
-
-<!-- ========== 14. FAQ ========== -->
-<h2 id="faq">14. よくある質問・トラブル対応</h2>
-
-<h3>Q. 打刻ボタンが押せない（グレーアウト）</h3>
-<p>現在の状態と矛盾する打刻はできない仕様です。たとえば「勤務中」のときは出勤ボタンは押せません。状態を確認して、適切なボタンを押してください。</p>
-
-<h3>Q. 休憩終わりを押し忘れて退勤してしまった</h3>
-<p>その休憩は計上されません（未閉ペア）。<code>/admin</code>（manager / office）から該当日に <code>break_end</code> 打刻を追加してください。</p>
-
-<h3>Q. 退勤後にテレワークで仕事を再開したい</h3>
-<p>もう一度「出勤」ボタンを押せば、新しいセッションが始まります。退勤後の移動・休憩時間は労働時間に含まれません。</p>
-
-<h3>Q. 全員分ダウンロードしたファイルにアラートが出ない</h3>
-<p>アラートはサマリシートの「アラート」列と、各人シート上部の「⚠」行に出ます。Excel/Numbers 下部の<b>シートタブ</b>で切り替えて確認してください。</p>
-
-<h3>Q. 過去の月のデータを再計算したい</h3>
-<p><code>/attendance</code> でその月を選んで「📊 生成」を押すと「再生成して上書きしますか？」と聞かれます。OK で最新の打刻状態（<code>/admin</code> での手動補正含む）から再集計されます。</p>
-
-<h3>Q. 自分の表示名を変えたい</h3>
-<p><code>/settings</code> の「表示名」欄を変えて「保存」。即時反映されます。</p>
-
-<h3>Q. 同じメールで二重登録できますか？</h3>
-<p>いいえ。1メール1アカウントです。ログインで使ってください。</p>
-
-<h3>Q. パスワードを忘れた</h3>
-<p>現バージョンにはパスワードリセット機能がありません。<span class="role role-office">office</span> に Firebase コンソールでパスワードリセットメールを送ってもらってください。</p>
-
-<h3>Q. 打刻データが他人に見えるのは問題ない？</h3>
-<p>社内利用前提のため、認証済みユーザーは全員の打刻状況を閲覧できます。これは「誰がいつ来てるか」を全員で見える化するための仕様です。外部公開は禁止。</p>
-
-<h3>Q. オフラインでも打刻できる？</h3>
-<p>打刻には認証＋RTDB通信が必要です。完全オフライン状態では失敗します。Wi-Fi が不安定な場合は復帰後に再度試してください。</p>
-
-<h3>Q. ボタンが反応しない / 表示が古い</h3>
-<p>Service Worker のキャッシュが原因の場合があります。ブラウザで「ハードリロード」（Ctrl+Shift+R / Cmd+Shift+R）を試してください。</p>
-
-<!-- ========== 15. データ構造 ========== -->
-<h2 id="data">15. データ構造（参考）</h2>
-
-<p>Firebase Realtime Database のツリー構造です。技術担当者向けの参考情報。</p>
-
-<pre>users/{uid}                プロフィール: name, email, role(staff|manager|office), color_index, created_at, updated_at
-meta/firstOfficeUid        最初に登録した office の uid（不変、role validate 用）
-employees/{empId}          社員マスタ: name, dept, workNo, empNo, active
-punches/{pushId}           打刻ログ（追記専用）:
-                             employeeId, employeeName, employeeDept,
-                             type ∈ { in | out | break_start | break_end },
-                             timestamp(ServerValue.TIMESTAMP),
-                             dateKey "YYYY-MM-DD",
-                             periodKey "YYYY-MM-H1|H2",
-                             deviceUid, deviceLabel
-editLogs/{pushId}          打刻修正履歴（manager/office のみ書込）:
-                             targetPunchId, beforeValue, afterValue,
-                             reason, editedBy, editedByEmail, editedAt
-attendance/months/{YM}     社労士書類生成のキャッシュ: records, edits, filename, year, month
-periods/{periodKey}        将来用（現在は未使用）
-devices/{uid}              端末ラベル（任意）</pre>
-
-<h3>権限ルール（要約）</h3>
-<ul>
-  <li><code>users</code>: 自分の doc は本人のみ書込、role 変更は office のみ（自分自身は不可）</li>
-  <li><code>meta/firstOfficeUid</code>: 一度書き込まれたら不変</li>
-  <li><code>employees</code>: 全員読込可、書込は office のみ</li>
-  <li><code>punches</code>: 全員読込可、書込は本人 + サーバー時刻一致が必須（manager/office は時刻自由）</li>
-  <li><code>editLogs</code>: manager/office のみ読み書き、追加のみ（更新・削除不可）</li>
-  <li><code>attendance/*</code>: office のみ読み書き</li>
-</ul>
-
-<h3>サーバー時刻の改ざん耐性</h3>
-<p>一般ユーザー（staff）の打刻は <code>timestamp === now</code> を <code>.validate</code> ルールで検証しているため、過去・未来時刻の偽装は不可能です。<code>/admin</code> での手動修正は manager/office のみ可能で、必ず <code>editLogs</code> に before/after が記録されます。</p>
-
-<hr style="margin:48px 0 16px;border:none;border-top:1px solid #ddd;">
-<p style="font-size:11px;color:#888;text-align:center;">© rivan group / みんなの出勤簿 — このマニュアルは <code>docs/manual.html</code> として管理されています。最新版は <code>https://github.com/lifdubhsliuhsf/minna-shukkinbo</code> を参照してください。</p>
+<!-- ============ TOC ============ -->
+<div class="page">
+  <nav class="toc">
+    <h2>目 次</h2>
+    <ol>
+      <li><a href="#intro">このアプリでできること</a><span class="fill"></span><span class="pg">P.03</span></li>
+      <li><a href="#first">はじめての人へ（ログインと最初の設定）</a><span class="fill"></span><span class="pg">P.04</span></li>
+      <li><a href="#roles">三つの権限（staff・manager・office）</a><span class="fill"></span><span class="pg">P.06</span></li>
+      <li><a href="#punch">打刻のやり方</a><span class="fill"></span><span class="pg">P.07</span></li>
+      <li><a href="#status">状態の流れ（勤務中・休憩中・退勤済）</a><span class="fill"></span><span class="pg">P.09</span></li>
+      <li><a href="#today">本日の打刻一覧</a><span class="fill"></span><span class="pg">P.10</span></li>
+      <li><a href="#period">期間集計（月２回制）</a><span class="fill"></span><span class="pg">P.11</span></li>
+      <li><a href="#admin">打刻管理（修正と履歴）</a><span class="fill"></span><span class="pg">P.13</span></li>
+      <li><a href="#employees">社員マスタ</a><span class="fill"></span><span class="pg">P.14</span></li>
+      <li><a href="#attendance">社労士書類の生成</a><span class="fill"></span><span class="pg">P.15</span></li>
+      <li><a href="#settings">設定とロール変更</a><span class="fill"></span><span class="pg">P.17</span></li>
+      <li><a href="#calc">実働時間の計算ルール</a><span class="fill"></span><span class="pg">P.18</span></li>
+      <li><a href="#pwa">ホーム画面に追加（PWA）</a><span class="fill"></span><span class="pg">P.19</span></li>
+      <li><a href="#faq">よくある質問</a><span class="fill"></span><span class="pg">P.20</span></li>
+    </ol>
+  </nav>
+</div>
+
+<!-- ============ 01. INTRO ============ -->
+<div class="page">
+<section id="intro">
+  <div class="section-num">01 &nbsp; INTRODUCTION</div>
+  <h2 class="sec">このアプリでできること</h2>
+  <p class="lede">
+    打刻・集計・社労士提出の三つを、一つのブラウザの中で扱う勤怠アプリです。<br>
+    紙のタイムカードもタイムカード機もExcel管理表も要りません。
+  </p>
+
+  <div class="phone-row">
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="ms-header">⏰ 打刻 <span class="tiny">向井</span></div>
+          <div class="ms-body">
+            <div class="ms-clock">10:23:45</div>
+            <div class="ms-date">2026/04/26 (日)</div>
+            <div class="ms-select">▼ 上野（代表）</div>
+            <div class="ms-status"><div class="lbl2">現在の状態</div><div class="val-working">勤務中</div></div>
+            <div class="ms-btns">
+              <div class="ms-btn in dim">出 勤</div>
+              <div class="ms-btn out">退 勤</div>
+              <div class="ms-btn brk">休 憩</div>
+              <div class="ms-btn bend dim">休憩終わり</div>
+            </div>
+          </div>
+          <div class="ms-bnav">
+            <span class="active">⏰<small>打刻</small></span>
+            <span>📋<small>一覧</small></span>
+            <span>📅<small>期間</small></span>
+            <span>📊<small>社労士</small></span>
+            <span>⚙️<small>設定</small></span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-label">SCREEN 01<strong>打刻画面</strong></div>
+    </div>
+
+    <div>
+      <h3 style="margin-top:0">主な機能</h3>
+      <ul style="line-height:2.2">
+        <li>大型ボタンで<mark>出勤・退勤・休憩・休憩終わり</mark>を打刻</li>
+        <li><mark>本日の打刻状況</mark>を全社員ぶん一覧表示（リアルタイム更新）</li>
+        <li>月２回制（H1: 1〜15日 ／ H2: 16〜末）の<mark>期間集計</mark>とCSV出力</li>
+        <li>打刻漏れの<mark>修正履歴</mark>を残す監査対応</li>
+        <li>社員マスタ管理（在籍・退職・部門）</li>
+        <li>1か月分の<mark>社労士提出xlsx</mark>を残業／深夜／週40h判定込みで自動生成</li>
+      </ul>
+
+      <h4>画面構成</h4>
+      <p>下のナビゲーションで切り替わる5〜7タブ構成です。権限によって表示されるタブが変わります（後述）。</p>
+      <ul style="font-size:14px;line-height:2.2">
+        <li>⏰ <strong>打刻</strong> — キオスクUI</li>
+        <li>📋 <strong>一覧</strong> — 本日の打刻状況</li>
+        <li>📅 <strong>期間</strong> — 半月単位の集計</li>
+        <li>🔧 <strong>管理</strong> — 打刻修正（manager 以上）</li>
+        <li>📊 <strong>社労士</strong> — xlsx 生成（office のみ）</li>
+        <li>👥 <strong>社員マスタ</strong> — 設定経由（office のみ）</li>
+        <li>⚙️ <strong>設定</strong> — プロフィール・権限</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="label">覚えておくと楽</span>
+    <div class="body">
+      <p>このアプリは <strong>スマホのホーム画面に追加できます</strong>（PWAといいます）。</p>
+      <p>毎日使うキオスクPC、スタッフ各自のスマホ、どちらでもショートカットを置けば普通のアプリと同じ感覚で使えます。設定方法はP.19の「ホーム画面に追加」を参照してください。</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ============ 02. FIRST ============ -->
+<div class="page">
+<section id="first">
+  <div class="section-num">02 &nbsp; GETTING STARTED</div>
+  <h2 class="sec">はじめての人へ</h2>
+  <p class="lede">初回はアカウントを作るだけ。次回からはメールアドレスとパスワードで入れます。<br>最初に登録した人が自動で <span class="rb rb-office">office</span>（管理者）になります。</p>
+
+  <h3 style="margin-top:32px">アクセスURL</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;margin:14px 0 32px">
+    <div style="background:#fff;padding:18px 22px;border:1px solid var(--rule);border-radius:3px;text-align:center">
+      <div class="mono" style="font-size:16px;font-weight:600">attendance-app-b047c<wbr>.web.app</div>
+      <div style="font-family:'BIZ UDPMincho',serif;font-size:11px;letter-spacing:0.15em;color:var(--ink-faint);margin-top:8px">URL を覚えるか、ブックマークに登録</div>
+    </div>
+    <div style="font-size:14px;color:var(--ink-soft);line-height:1.85">
+      <p style="margin:0">URL を開くと、ログイン画面が表示されます。初回の人は下の「新規登録はこちら」をタップしてください。</p>
+    </div>
+  </div>
+
+  <h3>アカウント登録時のルール</h3>
+
+  <div class="callout info" style="margin-top:16px">
+    <span class="label">メールアドレス</span>
+    <div class="body">
+      <p><strong>下記の形式で入力してください。</strong></p>
+      <p style="margin:10px 0;padding:10px 14px;background:#fff;border:1px dashed var(--rule);border-radius:3px">
+        <code class="kbd" style="font-size:14px;padding:4px 10px">[名字]_[名前]@rivan.com</code>
+      </p>
+      <p>例：<code class="kbd">mukai_tatsuya@rivan.com</code>（向井タツヤさんの場合）</p>
+      <p style="font-size:13px;color:var(--ink-soft)">※ ログインIDとして使うだけで、メール送信はされません。</p>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="label">パスワード</span>
+    <div class="body">
+      <p><strong>推測されにくい６文字以上のパスワード。</strong></p>
+      <p style="font-size:13px">「123456」「password」「誕生日」などの単純なものは避けてください。スマホ・PCの<mark>純正パスワード管理アプリ</mark>を使うのが一番安全です。</p>
+    </div>
+  </div>
+
+  <div style="margin: 28px 0; padding: 4px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%); border-radius: 3px;">
+    <div style="background: #fff; padding: 22px 26px; border-radius: 2px; position: relative;">
+      <div style="display: inline-block; background: var(--accent); color: #fff; font-family: 'BIZ UDPMincho', serif; font-weight: 700; font-size: 13px; letter-spacing: 0.2em; padding: 6px 14px; margin-bottom: 14px;">★ 絶対おすすめ</div>
+      <h4 style="margin: 0 0 10px; font-size: 19px; color: var(--ink); line-height: 1.5;">パスワード管理アプリの使用を強く推奨します</h4>
+      <p style="margin: 0 0 12px; font-size: 16px; line-height: 1.85;">
+        <strong>iPhone・Android どちらにも、純正のパスワード管理アプリが最初から入っています。</strong>
+        これを使えば、<mark>覚える必要も、毎回入力する必要もなくなります。</mark>
+      </p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--rule);">
+        <div>
+          <div style="font-family: 'BIZ UDPMincho', serif; font-size: 13px; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 6px;">iPhone の場合</div>
+          <div style="font-size: 14px; line-height: 1.75;">設定 →「パスワード」／または Safari で新規登録時に「強力なパスワード」が自動提案されます。</div>
+        </div>
+        <div>
+          <div style="font-family: 'BIZ UDPMincho', serif; font-size: 13px; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 6px;">Android の場合</div>
+          <div style="font-size: 14px; line-height: 1.75;">Google「パスワードマネージャー」が Chrome と連携。登録時に保存提案が出ます。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone-row two">
+    <div>
+      <div class="phone">
+        <div class="phone-screen" style="background:#f9fafb;justify-content:flex-start;padding:30px 16px">
+          <h3 style="text-align:center;font-size:20px;font-family:'BIZ UDPMincho',serif;margin:24px 0 4px;font-weight:700">みんなの出勤簿</h3>
+          <p style="text-align:center;font-size:11px;color:#888;margin:0 0 20px">タイムカード × 社労士提出</p>
+          <div style="background:#fff;padding:16px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+            <div style="font-size:10px;color:#6b7280;margin-bottom:3px">メールアドレス</div>
+            <div style="border:1px solid #d1d5db;border-radius:3px;padding:6px 8px;font-size:11px;margin-bottom:10px">example@rivan.com</div>
+            <div style="font-size:10px;color:#6b7280;margin-bottom:3px">パスワード</div>
+            <div style="border:1px solid #d1d5db;border-radius:3px;padding:6px 8px;font-size:11px;margin-bottom:14px">••••••••</div>
+            <div style="background:#111;color:#fff;text-align:center;padding:8px 0;border-radius:3px;font-size:13px;font-weight:700">ログイン</div>
+          </div>
+          <div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:14px;text-decoration:underline">新規登録はこちら</div>
+        </div>
+      </div>
+      <div class="phone-label">SCREEN<strong>ログイン</strong></div>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="phone-screen" style="background:#f9fafb;justify-content:flex-start;padding:30px 16px">
+          <h3 style="text-align:center;font-size:18px;font-family:'BIZ UDPMincho',serif;margin:24px 0 18px;font-weight:700">新規登録</h3>
+          <div style="background:#fff;padding:14px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);font-size:10px">
+            <div style="color:#6b7280;margin-bottom:3px">表示名</div>
+            <div style="border:1px solid #d1d5db;border-radius:3px;padding:5px 7px;margin-bottom:8px">向井 達也</div>
+            <div style="color:#6b7280;margin-bottom:3px">メール</div>
+            <div style="border:1px solid #d1d5db;border-radius:3px;padding:5px 7px;margin-bottom:8px">mukai_tatsuya@rivan.com</div>
+            <div style="color:#6b7280;margin-bottom:3px">パスワード</div>
+            <div style="border:1px solid #d1d5db;border-radius:3px;padding:5px 7px;margin-bottom:8px">••••••••</div>
+            <div style="color:#6b7280;margin-bottom:3px">パスワード確認</div>
+            <div style="border:1px solid #d1d5db;border-radius:3px;padding:5px 7px;margin-bottom:10px">••••••••</div>
+            <div style="background:#111;color:#fff;text-align:center;padding:6px 0;border-radius:3px;font-size:11px;font-weight:700">登録</div>
+            <div style="font-size:9px;color:#9ca3af;margin-top:8px;line-height:1.5">※ 最初に登録した人が office (管理者) になります。それ以降は staff として登録されます。</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-label">SCREEN<strong>新規登録</strong></div>
+    </div>
+  </div>
+
+  <span class="usecase">はじめてアプリを開いたとき</span>
+  <ol class="steps">
+    <li>
+      <strong>ログイン画面で「新規登録はこちら」をタップ</strong>
+      <span class="hint">下の方にある小さい文字です。</span>
+    </li>
+    <li>
+      <strong>表示名・メール・パスワードを入力 →「登録」</strong>
+      <span class="hint">登録と同時にログイン状態になり、打刻画面に移動します。</span>
+    </li>
+    <li>
+      <strong>あなたが最初の登録者なら自動で office になります</strong>
+      <span class="hint">画面右下の「設定」を開くと現在の権限が確認できます。</span>
+    </li>
+    <li>
+      <strong>他のスタッフを招待する</strong>
+      <span class="hint">URL を共有してもらい、各自で「新規登録」してもらいましょう（初期権限は staff）。</span>
+    </li>
+  </ol>
+
+  <h3>二回目以降のログイン</h3>
+  <p>
+    <mark>一度ログインすれば基本ログイン状態が続きます。</mark>
+    ブラウザを閉じても、スマホを再起動しても、そのままで大丈夫。
+    自分で「ログアウト」を押した時、または別のブラウザ・別の端末で使う時だけ、メールアドレスとパスワードの入力が必要になります。
+  </p>
+
+  <div class="callout warn">
+    <span class="label">注意</span>
+    <div class="body">
+      <strong>パスワードは忘れないように。</strong>
+      現バージョンには「パスワードを忘れた」という再発行機能がありません。
+      どうしても忘れたら office（管理者）に連絡し、Firebase コンソールでパスワードリセットメールを送ってもらってください。
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ============ 03. ROLES ============ -->
+<div class="page">
+<section id="roles">
+  <div class="section-num">03 &nbsp; ROLES</div>
+  <h2 class="sec">三つの権限</h2>
+  <p class="lede">
+    アプリ内の権限は3層あります。最初に登録した人が <strong>office</strong>、それ以降は <strong>staff</strong>。<br>
+    必要に応じて office が他のメンバーを <strong>manager</strong> や <strong>office</strong> に昇格します。
+  </p>
+
+  <div class="palette">
+    <div class="swatch">
+      <div class="role-lbl">LV.1 — DEFAULT</div>
+      <div class="role-name">staff <span class="rb rb-staff">スタッフ</span></div>
+      <div class="role-desc">一般スタッフ。打刻・閲覧・自分の表示名変更ができる。新規登録時の既定の権限。</div>
+    </div>
+    <div class="swatch">
+      <div class="role-lbl">LV.2 — STORE LEAD</div>
+      <div class="role-name">manager <span class="rb rb-manager">マネージャー</span></div>
+      <div class="role-desc">店舗マネージャー。打刻の追加・修正・削除と editLogs（修正履歴）の閲覧ができる。</div>
+    </div>
+    <div class="swatch">
+      <div class="role-lbl">LV.3 — TOP</div>
+      <div class="role-name">office <span class="rb rb-office">事務員</span></div>
+      <div class="role-desc">最上位。社員マスタ管理、社労士書類xlsx生成、ユーザーの role 変更ができる。</div>
+    </div>
+  </div>
+
+  <h3>機能アクセス対応表</h3>
+  <table class="ref">
+    <thead><tr>
+      <th>機能</th>
+      <th class="center"><span class="rb rb-staff">staff</span></th>
+      <th class="center"><span class="rb rb-manager">manager</span></th>
+      <th class="center"><span class="rb rb-office">office</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>打刻（出勤・退勤・休憩・休憩終わり）</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
+      <tr><td>本日一覧 ／ 期間集計の閲覧と CSV ダウンロード</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
+      <tr><td>自分の表示名変更</td><td class="center">✓</td><td class="center">✓</td><td class="center">✓</td></tr>
+      <tr><td>打刻の追加・修正・削除（<code>/admin</code>）</td><td class="center">−</td><td class="center">✓</td><td class="center">✓</td></tr>
+      <tr><td>修正履歴 editLogs の閲覧</td><td class="center">−</td><td class="center">✓</td><td class="center">✓</td></tr>
+      <tr><td>社員マスタ編集（<code>/employees</code>）</td><td class="center">−</td><td class="center">−</td><td class="center">✓</td></tr>
+      <tr><td>社労士書類xlsx生成（<code>/attendance</code>）</td><td class="center">−</td><td class="center">−</td><td class="center">✓</td></tr>
+      <tr><td>ユーザーの role 変更</td><td class="center">−</td><td class="center">−</td><td class="center">✓</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="label">重要</span>
+    <div class="body">
+      <strong>office は最低１人必要です。</strong>
+      最後の office を staff に降格しようとすると画面側で止められます（万一の操作ミスで管理者ゼロになる事故を防ぐ仕様）。
+    </div>
+  </div>
+
+  <h3>ロールを変える</h3>
+  <p>office は <code>/settings</code> 画面の「ユーザー一覧」から、各メンバー右側のセレクトでロールを切り替えられます。変更内容はその場で反映されます。</p>
+</section>
+</div>
+
+<!-- ============ 04. PUNCH ============ -->
+<div class="page">
+<section id="punch">
+  <div class="section-num">04 &nbsp; PUNCH</div>
+  <h2 class="sec">打刻のやり方</h2>
+  <p class="lede">
+    打刻画面は<mark>大型ボタン４つ</mark>のキオスク型。<br>
+    現在の状態によって、押せるボタンが自動で切り替わります。
+  </p>
+
+  <div class="phone-row">
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="ms-header">⏰ 打刻 <span class="tiny">向井</span></div>
+          <div class="ms-body">
+            <div class="ms-clock">10:23:45</div>
+            <div class="ms-date">2026/04/26 (日)</div>
+            <div class="ms-select">▼ 上野（代表）</div>
+            <div class="ms-status"><div class="lbl2">現在の状態</div><div class="val-working">勤務中</div></div>
+            <div class="ms-btns">
+              <div class="ms-btn in dim">出 勤</div>
+              <div class="ms-btn out">退 勤</div>
+              <div class="ms-btn brk">休 憩</div>
+              <div class="ms-btn bend dim">休憩終わり</div>
+            </div>
+          </div>
+          <div class="ms-bnav">
+            <span class="active">⏰<small>打刻</small></span>
+            <span>📋<small>一覧</small></span>
+            <span>📅<small>期間</small></span>
+            <span>📊<small>社労士</small></span>
+            <span>⚙️<small>設定</small></span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-label">SCREEN<strong>打刻（勤務中の例）</strong></div>
+    </div>
+
+    <div>
+      <h3 style="margin-top:0">画面の見方</h3>
+      <ol class="annot-list">
+        <li>
+          <strong>本日の打刻状況テーブル</strong>
+          画面上部、全社員の出勤・退勤・休憩・実働がリアルタイムで表示されます。
+        </li>
+        <li>
+          <strong>大きい時計</strong>
+          サーバー時刻と同期した現在時刻。打刻はこの時刻が記録されます。
+        </li>
+        <li>
+          <strong>氏名セレクト</strong>
+          打刻したい人を選びます。前回選んだ人を覚えているので、専用端末では1タップで済みます。
+        </li>
+        <li>
+          <strong>現在の状態</strong>
+          選んだ人の今の状態（未出勤／勤務中／休憩中／退勤済み）。
+        </li>
+        <li>
+          <strong>4ボタン（出勤・退勤・休憩・休憩終わり）</strong>
+          状態に応じてグレーアウト。押せる組み合わせだけが有効。
+        </li>
+        <li>
+          <strong>ボトムナビ</strong>
+          画面切り替え。権限によってタブの数が変わります。
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <span class="usecase">基本の打刻フロー</span>
+  <ol class="steps">
+    <li>
+      <strong>氏名セレクトで自分を選ぶ</strong>
+      <span class="hint">前回選んだ人が自動で残るので、自分専用の端末なら毎回選び直す必要なし。</span>
+    </li>
+    <li>
+      <strong>現在の状態を確認</strong>
+      <span class="hint">「未出勤」なら出勤、「勤務中」なら退勤か休憩、と切り替わる。</span>
+    </li>
+    <li>
+      <strong>該当ボタンをタップ → 確認ダイアログで OK</strong>
+      <span class="hint">記録された時刻は下部の打刻履歴にすぐ表示されます。</span>
+    </li>
+  </ol>
+
+  <div class="callout tip">
+    <span class="label">複数回休憩</span>
+    <div class="body">
+      <strong>1日に何度でも 休憩→休憩終わり を繰り返せます。</strong>
+      昼1時間 + 午後30分の２回休憩でも、それぞれ別の区間として記録され、実働時間から正しく差し引かれます。
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <span class="label">テレワーク再開</span>
+    <div class="body">
+      <strong>退勤したあとに再度出勤できます。</strong>
+      たとえばオフィスを退勤して帰宅後、家でテレワークを再開する場合は、もう一度「出勤」を押してください。退勤〜出勤の間（移動時間）は労働時間に含まれません。
+    </div>
+  </div>
+
+  <h3>本日の打刻履歴と CSV</h3>
+  <p>氏名を選ぶと、画面下部にその人の本日の打刻履歴がすべて表示されます。右上の <span class="kbd">⇩ 本日CSV</span> ボタンで、本日の全社員データを CSV 形式でダウンロードできます。</p>
+</section>
+</div>
+
+<!-- ============ 05. STATUS ============ -->
+<div class="page">
+<section id="status">
+  <div class="section-num">05 &nbsp; STATE MACHINE</div>
+  <h2 class="sec">状態の流れ</h2>
+  <p class="lede">
+    打刻ボタンは「現在の状態」を見て自動で有効・無効を切り替えます。<br>
+    どのボタンが押せるか、状態ごとに整理しましょう。
+  </p>
+
+  <div class="status-row">
+    <div class="status-pill none">未出勤</div>
+    <div class="status-pill working">勤務中</div>
+    <div class="status-pill onbreak">休憩中</div>
+    <div class="status-pill done">退勤済み</div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-box">未出勤</div>
+    <div class="flow-arrow">→<span class="sub">出勤</span></div>
+    <div class="flow-box">勤務中</div>
+    <div class="flow-arrow">⇄<span class="sub">休憩 / 終わり</span></div>
+    <div class="flow-box">休憩中</div>
+  </div>
+  <div class="flow">
+    <div class="flow-box">勤務中</div>
+    <div class="flow-arrow">→<span class="sub">退勤</span></div>
+    <div class="flow-box">退勤済み</div>
+    <div class="flow-arrow">→<span class="sub">再出勤</span></div>
+    <div class="flow-box">勤務中</div>
+  </div>
+
+  <h3>状態 × 押せるボタン</h3>
+  <table class="ref">
+    <thead><tr>
+      <th>現在の状態</th>
+      <th class="center">出勤</th>
+      <th class="center">退勤</th>
+      <th class="center">休憩</th>
+      <th class="center">休憩終わり</th>
+      <th>用途</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="status-pill none" style="display:inline-block">未出勤</div></td><td class="center">✓</td><td class="center">−</td><td class="center">−</td><td class="center">−</td><td>1日の最初</td></tr>
+      <tr><td><div class="status-pill working" style="display:inline-block">勤務中</div></td><td class="center">−</td><td class="center">✓</td><td class="center">✓</td><td class="center">−</td><td>休憩入りまたは終業</td></tr>
+      <tr><td><div class="status-pill onbreak" style="display:inline-block">休憩中</div></td><td class="center">−</td><td class="center">✓ *</td><td class="center">−</td><td class="center">✓</td><td>業務再開 or 直帰</td></tr>
+      <tr><td><div class="status-pill done" style="display:inline-block">退勤済み</div></td><td class="center">✓</td><td class="center">−</td><td class="center">−</td><td class="center">−</td><td>テレワーク再開</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:13px;color:var(--ink-soft);margin-top:6px">* 休憩中の直帰も可能（業務上やむを得ない場合の救済措置）。</p>
+
+  <div class="callout info">
+    <span class="label">ポイント</span>
+    <div class="body">
+      <strong>「休憩終わり」を押し忘れると、その休憩は計上されません。</strong>
+      業務再開を忘れて退勤すると、休憩時間が0として記録されます。
+      気づいたら manager または office に連絡し、<code>/admin</code> から休憩終わりの打刻を追加してもらってください（修正履歴に残ります）。
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ============ 06. TODAY ============ -->
+<div class="page">
+<section id="today">
+  <div class="section-num">06 &nbsp; TODAY</div>
+  <h2 class="sec">本日の打刻一覧</h2>
+  <p class="lede">
+    その日の全社員の打刻状況を、一目で見渡せる閲覧画面です。<br>
+    「誰が今いるのか」「打刻漏れはいないか」をリアルタイムで確認します。
+  </p>
+
+  <div class="phone-row reverse">
+    <div>
+      <h3 style="margin-top:0">表示される列</h3>
+      <table class="ref">
+        <thead><tr><th>列</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td>No</td><td>workNo（社員番号順表示）</td></tr>
+          <tr><td>氏名 / 部門</td><td>マスタ自動表示</td></tr>
+          <tr><td>出勤</td><td>当日最初の出勤打刻時刻</td></tr>
+          <tr><td>退勤</td><td>当日最後の退勤打刻時刻</td></tr>
+          <tr><td>休憩</td><td>当日の休憩時間合計</td></tr>
+          <tr><td>実働</td><td>退勤−出勤−休憩（マルチセッション対応）</td></tr>
+          <tr><td>状態</td><td>勤 / 休 / 退 / 未</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout tip">
+        <span class="label">リアルタイム</span>
+        <div class="body">
+          誰かが打刻すると、画面を開いている全員に即座に反映されます。リロード不要。
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="ms-header">📋 本日の打刻一覧</div>
+          <div class="ms-body">
+            <div style="font-size:9px;color:#888;margin-bottom:6px">2026-04-26</div>
+            <table class="ms-tbl">
+              <thead><tr><th>No</th><th>氏名</th><th>出</th><th>退</th><th>実働</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>上野</td><td>09:02</td><td>—</td><td>—</td><td><span class="pill in">勤</span></td></tr>
+                <tr><td>2</td><td>谷川</td><td>09:00</td><td>18:30</td><td>8.5h</td><td><span class="pill out">退</span></td></tr>
+                <tr><td>3</td><td>天重</td><td>10:15</td><td>—</td><td>—</td><td><span class="pill brk">休</span></td></tr>
+                <tr><td>4</td><td>山根</td><td>09:30</td><td>17:00</td><td>6.5h</td><td><span class="pill out">退</span></td></tr>
+                <tr><td>5</td><td>佐藤</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="ms-bnav">
+            <span>⏰<small>打刻</small></span>
+            <span class="active">📋<small>一覧</small></span>
+            <span>📅<small>期間</small></span>
+            <span>📊<small>社労士</small></span>
+            <span>⚙️<small>設定</small></span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-label">SCREEN<strong>本日の打刻一覧</strong></div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ============ 07. PERIOD ============ -->
+<div class="page">
+<section id="period">
+  <div class="section-num">07 &nbsp; PERIOD</div>
+  <h2 class="sec">期間集計（月２回制）</h2>
+  <p class="lede">
+    日本の月２回給与に対応した集計画面。<br>
+    1〜15日を <strong>H1</strong>、16〜末を <strong>H2</strong> として、半月単位の出勤マトリクスを表示します。
+  </p>
+
+  <div class="phone-row">
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="ms-header">📅 期間集計</div>
+          <div class="ms-body">
+            <div style="display:flex;gap:4px;align-items:center;font-size:9px;margin-bottom:6px">
+              <span style="border:1px solid #d1d5db;padding:2px 6px;border-radius:3px;background:#fff">←</span>
+              <strong>2026-04-16 〜 30</strong>
+              <span style="border:1px solid #d1d5db;padding:2px 6px;border-radius:3px;background:#fff">→</span>
+              <span style="margin-left:auto;background:#16a34a;color:#fff;padding:2px 6px;border-radius:3px;font-weight:700">⇩CSV</span>
+            </div>
+            <div class="ms-quad">
+              <div class="ms-card"><div class="ttl">対象社員</div><div class="num">98</div></div>
+              <div class="ms-card"><div class="ttl">総打刻</div><div class="num">421</div></div>
+              <div class="ms-card"><div class="ttl">未退勤</div><div class="num" style="color:#b45309">3</div></div>
+              <div class="ms-card"><div class="ttl">合計実働</div><div class="num">784h</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:60px repeat(8,1fr);font-size:8px;gap:1px">
+              <div style="font-weight:700;text-align:center;padding:3px">氏名</div>
+              <div class="ms-period-cell sat">16<br><span style="color:#9ca3af">土</span></div>
+              <div class="ms-period-cell sun">17<br><span style="color:#9ca3af">日</span></div>
+              <div class="ms-period-cell">18<br><span style="color:#9ca3af">月</span></div>
+              <div class="ms-period-cell">19<br><span style="color:#9ca3af">火</span></div>
+              <div class="ms-period-cell">20<br><span style="color:#9ca3af">水</span></div>
+              <div class="ms-period-cell">21<br><span style="color:#9ca3af">木</span></div>
+              <div class="ms-period-cell">22<br><span style="color:#9ca3af">金</span></div>
+              <div class="ms-period-cell sat">23<br><span style="color:#9ca3af">土</span></div>
+              <div style="font-weight:700;font-size:9px;padding:2px;background:#fff">上野</div>
+              <div class="ms-period-cell sat">—</div>
+              <div class="ms-period-cell sun">—</div>
+              <div class="ms-period-cell present">9:00<br>18:00</div>
+              <div class="ms-period-cell present">9:00<br>18:30</div>
+              <div class="ms-period-cell warn">9:00<br>出のみ</div>
+              <div class="ms-period-cell present">9:00<br>17:30</div>
+              <div class="ms-period-cell present">9:00<br>18:00</div>
+              <div class="ms-period-cell sat">—</div>
+              <div style="font-weight:700;font-size:9px;padding:2px;background:#fff">谷川</div>
+              <div class="ms-period-cell sat">—</div>
+              <div class="ms-period-cell sun">—</div>
+              <div class="ms-period-cell present">9:30<br>20:00</div>
+              <div class="ms-period-cell present">9:30<br>20:30</div>
+              <div class="ms-period-cell present">9:30<br>21:00</div>
+              <div class="ms-period-cell present">9:30<br>20:00</div>
+              <div class="ms-period-cell present">9:30<br>19:00</div>
+              <div class="ms-period-cell sat">—</div>
+            </div>
+          </div>
+          <div class="ms-bnav">
+            <span>⏰<small>打刻</small></span>
+            <span>📋<small>一覧</small></span>
+            <span class="active">📅<small>期間</small></span>
+            <span>📊<small>社労士</small></span>
+            <span>⚙️<small>設定</small></span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-label">SCREEN<strong>期間集計</strong></div>
+    </div>
+
+    <div>
+      <h3 style="margin-top:0">期間の操作</h3>
+      <ul>
+        <li><strong>← 前期間 / 次期間 →</strong>：期間移動</li>
+        <li><strong>今期間</strong>：現在期間にジャンプ</li>
+        <li><strong>⇩ CSV 出力</strong>：表示中期間をダウンロード</li>
+      </ul>
+
+      <h4>サマリカード</h4>
+      <ul style="font-size:14px">
+        <li><strong>対象社員</strong>：active な社員数</li>
+        <li><strong>総打刻数</strong>：期間内の打刻件数</li>
+        <li><strong>未退勤</strong>：出勤のみで退勤がない日（要対応）</li>
+        <li><strong>合計実働</strong>：全社員の実働合計</li>
+      </ul>
+
+      <h4>セルの色分け</h4>
+      <ul style="font-size:14px">
+        <li><strong>緑</strong>：通常勤務（出勤＋退勤あり）</li>
+        <li><strong>黄</strong>：打刻漏れ（出のみ／退のみ）</li>
+        <li><strong>薄赤</strong>：日曜日</li>
+        <li><strong>薄青</strong>：土曜日</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>セル表記の例</h3>
+  <pre class="code">9:00      ← 出勤
+18:00     ← 退勤
+休1.0h    ← 休憩時間（記録があれば併記）</pre>
+
+  <div class="callout warn">
+    <span class="label">黄色セル</span>
+    <div class="body">
+      <strong>「出のみ」「退のみ」は打刻漏れの可能性。</strong>
+      該当社員に確認のうえ、<code>/admin</code>（manager 以上）から打刻を追加・修正してください。修正は理由とともに editLogs に記録されます。
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ============ 08. ADMIN ============ -->
+<div class="page">
+<section id="admin">
+  <div class="section-num">08 &nbsp; ADMIN</div>
+  <h2 class="sec">打刻管理（修正と履歴）</h2>
+  <p class="lede">
+    打刻漏れの追加、誤打刻の修正、削除を行う画面。<span class="rb rb-manager">manager</span> <span class="rb rb-office">office</span> 限定。<br>
+    すべての操作は <strong>必ず理由</strong> を残し、<code>editLogs</code> に履歴として残ります。
+  </p>
+
+  <h3>使い方</h3>
+  <ol class="steps">
+    <li>
+      <strong>社員と日付を選択</strong>
+      <span class="hint">URL に <code>?emp=E001&amp;date=2026-04-25</code> のような形でブックマークも可。</span>
+    </li>
+    <li>
+      <strong>その日の打刻一覧が表示される</strong>
+      <span class="hint">時刻順に「出勤・退勤・休憩開始・休憩終わり」が並びます。</span>
+    </li>
+    <li>
+      <strong>編集 / 削除 / 追加 のいずれかを実行</strong>
+      <span class="hint">行の右側の「編集」「削除」、または上部の「+ 打刻を追加」ボタン。</span>
+    </li>
+    <li>
+      <strong>理由を必ず記入</strong>
+      <span class="hint">例：「退勤打刻漏れ（本人申告 4/26 09:00）」など、後から見て分かる理由。</span>
+    </li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="label">必須</span>
+    <div class="body">
+      <strong>修正・削除には必ず理由を入力してください。</strong>
+      これは法的監査（労基署対応など）のためです。理由を残しておけば「いつ・なぜ変更したのか」を後から証明できます。
+    </div>
+  </div>
+
+  <h3>修正履歴の確認</h3>
+  <p>ページ下部の <span class="kbd">修正履歴（editLogs）最新30件</span> を展開すると、
+  誰が・いつ・何を・なぜ変更したかの履歴が並びます。経理・労務担当が目を通すべき情報です。</p>
+</section>
+</div>
+
+<!-- ============ 09. EMPLOYEES ============ -->
+<div class="page">
+<section id="employees">
+  <div class="section-num">09 &nbsp; EMPLOYEES</div>
+  <h2 class="sec">社員マスタ</h2>
+  <p class="lede">
+    打刻時に表示される氏名リストの管理。<span class="rb rb-office">office</span> 限定。<br>
+    新入社員の追加、退職者の在籍解除、部門・社員番号の変更が行えます。
+  </p>
+
+  <h3>追加</h3>
+  <ol class="steps">
+    <li>
+      <strong>上部「新規追加」セクションで情報を入力</strong>
+      <span class="hint">No.（任意）／氏名（必須）／部門／社員番号（任意）</span>
+    </li>
+    <li>
+      <strong>「追加」ボタン → 自動で連番ID（例：E099）が付く</strong>
+    </li>
+  </ol>
+
+  <h3>編集</h3>
+  <p>一覧の入力欄に直接タイプして変更 → フォーカスを外すと自動保存されます。</p>
+
+  <h3>退職処理（推奨）</h3>
+  <p>「在籍」のチェックを外す → 打刻画面のドロップダウンから消えますが、過去の打刻履歴は無傷で保たれます。</p>
+
+  <h3>完全削除</h3>
+  <p>右端「削除」 → <code>employees</code> ツリーから消えます。<mark>打刻履歴 (<code>punches</code>) は別ツリーなのでそのまま残ります。</mark>退職時はまず「在籍解除」、しばらく経って完全に整理したい時に「削除」、という二段階運用がおすすめ。</p>
+
+  <div class="callout tip">
+    <span class="label">運用のコツ</span>
+    <div class="body">
+      新入社員が入ったら<strong>その人が打刻する前に</strong>マスタへ追加してください。マスタにない人を打刻させようとしてもセレクトに出てきません。
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ============ 10. ATTENDANCE ============ -->
+<div class="page">
+<section id="attendance">
+  <div class="section-num">10 &nbsp; SHAROUSHI</div>
+  <h2 class="sec">社労士書類の生成</h2>
+  <p class="lede">
+    1か月分の出勤簿を、残業・深夜・週40h判定込みで xlsx にまとめる画面。<span class="rb rb-office">office</span> 限定。<br>
+    打刻データから自動生成するため、別途 Excel をアップする必要はありません。
+  </p>
+
+  <span class="usecase">月次の生成手順</span>
+  <ol class="steps">
+    <li>
+      <strong>下ナビ「📊 社労士」を開く</strong>
+      <span class="hint">office にだけ表示されるタブ。</span>
+    </li>
+    <li>
+      <strong>対象月を選択（既定: 当月）</strong>
+      <span class="hint">スマホでもタップでカレンダーから月を選べます。</span>
+    </li>
+    <li>
+      <strong>「📊 生成」ボタンを押す</strong>
+      <span class="hint">/punches から自動集計されてサマリ表示。10〜30秒。</span>
+    </li>
+    <li>
+      <strong>サマリ表で人ごとの労働時間とアラートを確認</strong>
+    </li>
+    <li>
+      <strong>「全員分ダウンロード (xlsx)」 → 完了</strong>
+      <span class="hint">サマリ + 各人別シート（98名なら99シート）が1ファイルに収まります。</span>
+    </li>
+  </ol>
+
+  <h3>ダウンロード xlsx の構造</h3>
+  <p>1ファイルに <strong>複数シート</strong> が入っています。Excel・Numbers の<mark>下部のシートタブ</mark>で切り替えて閲覧してください。</p>
+
+  <div class="two-col">
+    <div>
+      <h4>サマリシート</h4>
+      <ul style="font-size:14px">
+        <li>作業番号</li>
+        <li>氏名</li>
+        <li>部門</li>
+        <li>総労働時間</li>
+        <li>総残業時間</li>
+        <li>総深夜時間</li>
+        <li>アラート（集計済）</li>
+      </ul>
+    </div>
+    <div>
+      <h4>各人シート（E001_上野 形式）</h4>
+      <ul style="font-size:14px">
+        <li>上部に集計アラート行</li>
+        <li>日付・出勤・退勤・休憩・労働・残業・深夜・週累計・行アラート</li>
+        <li>最終行に月合計</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>サマリのアラート列</h3>
+  <table class="ref">
+    <thead><tr><th>表示</th><th>意味</th></tr></thead>
+    <tbody>
+      <tr><td>月残業45h超</td><td>36協定の月45h上限を超過。要対応</td></tr>
+      <tr><td>週40h超あり</td><td>その月のどこかで法定週40h超過</td></tr>
+      <tr><td>日8h超あり</td><td>その月のどこかで法定日8h超過</td></tr>
+      <tr><td>打刻漏れ</td><td>出勤か退勤の片方が欠けている日がある</td></tr>
+      <tr><td>編集あり</td><td><code>/admin</code> から手動補正された行がある</td></tr>
+    </tbody>
+  </table>
+
+  <h3>過去の出勤簿</h3>
+  <p>「② 過去の出勤簿」リストから過去月をクリックすると、保存済みデータが即表示されます。再生成は不要。</p>
+
+  <h3>生成済み月の上書き</h3>
+  <p>同じ月で再度「生成」を押すと、確認ダイアログ <strong>「再生成して上書きしますか？」</strong> が出ます。OK で最新の打刻状態（<code>/admin</code> 補正含む）から再集計されます。</p>
+
+  <div class="callout info">
+    <span class="label">月末ワークフロー</span>
+    <div class="body">
+      <p><strong>月末締め後の運用イメージ：</strong></p>
+      <ol style="margin:8px 0;padding-left:20px;font-size:14px">
+        <li>当月最終日の終業後、出勤簿が確定するのを待つ</li>
+        <li>翌日に <code>/period</code> で打刻漏れチェック → <code>/admin</code> で補正</li>
+        <li><code>/attendance</code> で月選択 → 「生成」</li>
+        <li>サマリのアラートを精査（月45h超、打刻漏れ等）</li>
+        <li>「全員分ダウンロード」 → xlsx を社労士へ送付</li>
+      </ol>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ============ 11. SETTINGS ============ -->
+<div class="page">
+<section id="settings">
+  <div class="section-num">11 &nbsp; SETTINGS</div>
+  <h2 class="sec">設定とロール変更</h2>
+  <p class="lede">下ナビの ⚙️「設定」で、自分のプロフィールと（office なら）他メンバーのロールを管理できます。</p>
+
+  <h3>変えられるもの</h3>
+
+  <h4>表示名</h4>
+  <p>打刻画面・本日一覧・社労士書類で見える自分の名前。いつでも変更可能。「保存」ボタンで反映。</p>
+
+  <h4>ロール（office のみ）</h4>
+  <p>「ユーザー一覧」セクションで、各メンバー右側のセレクトで <span class="rb rb-staff">staff</span> / <span class="rb rb-manager">manager</span> / <span class="rb rb-office">office</span> を切り替えます。確認ダイアログ → OK で即反映。</p>
+
+  <div class="callout warn">
+    <span class="label">守られているところ</span>
+    <div class="body">
+      <ul style="margin:0;padding-left:18px;font-size:14px">
+        <li><strong>自分自身のロール変更はできません</strong>（誤操作防止）</li>
+        <li><strong>最後の office を降格できません</strong>（管理者ゼロ防止）</li>
+        <li>変更不可項目: メールアドレス、UID、登録日</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>ログアウト</h3>
+  <p>右上の「ログアウト」ボタンで終了。共用端末を使ったあとは必ずログアウトを。</p>
+
+  <h3>関連リンク</h3>
+  <p>権限に応じて、各画面へのショートカットリンクが下部に表示されます（manager は /admin、office は /attendance + /employees まで）。</p>
+</section>
+</div>
+
+<!-- ============ 12. CALC ============ -->
+<div class="page">
+<section id="calc">
+  <div class="section-num">12 &nbsp; CALCULATION</div>
+  <h2 class="sec">実働時間の計算ルール</h2>
+  <p class="lede">
+    全画面で共通に使われる <code>computeWorkHours</code> 関数の動き。<br>
+    「なぜこの数字になるのか」を知っておくと、修正判断のヒントになります。
+  </p>
+
+  <h3>基本式</h3>
+  <pre class="code">実働 = (退勤 − 出勤) − Σ休憩</pre>
+  <p>1日に複数の出勤／退勤がある場合（テレワーク再出勤など）は、各セッションごとに上記を算出して合計します。</p>
+
+  <h3>状態走査アルゴリズム</h3>
+  <p>打刻を時系列順に並べ、以下のルールで状態を更新しながら「勤務中」区間の合計を加算します。</p>
+
+  <table class="ref">
+    <thead><tr><th>現在状態</th><th>打刻</th><th>処理</th><th>新状態</th></tr></thead>
+    <tbody>
+      <tr><td>none / done</td><td>in</td><td>workStart 記録</td><td>working</td></tr>
+      <tr><td>working</td><td>out</td><td>workMs += (now − workStart)、sessions++</td><td>done</td></tr>
+      <tr><td>working</td><td>break_start</td><td>workMs += (now − workStart)</td><td>on_break</td></tr>
+      <tr><td>on_break</td><td>break_end</td><td>breakMs += (now − breakStart)</td><td>working</td></tr>
+      <tr><td>on_break</td><td>out</td><td>未閉休憩は計上せずセッション終了</td><td>done</td></tr>
+    </tbody>
+  </table>
+
+  <h3>計算例</h3>
+  <pre class="code">9:00  出勤
+12:00 休憩       ← 9-12 = 3h を workMs に加算
+13:00 休憩終わり ← 12-13 = 1h を breakMs に加算
+15:00 休憩       ← 13-15 = 2h を workMs に加算
+15:30 休憩終わり ← 0.5h を breakMs に加算
+18:00 退勤      ← 15:30-18 = 2.5h を workMs に加算 / sessions=1
+20:00 出勤(在宅)
+22:00 退勤      ← 20-22 = 2h を workMs に加算 / sessions=2
+
+合計 workMs = 3 + 2 + 2.5 + 2 = 9.5h
+合計 breakMs = 1 + 0.5 = 1.5h
+sessions = 2</pre>
+
+  <h3>残業 / 深夜の判定</h3>
+  <ul>
+    <li><strong>日残業</strong>: その日の労働時間 − 法定 8h（負ならゼロ）</li>
+    <li><strong>週残業</strong>: 月曜起点の週内累計が 40h を超えた分</li>
+    <li><strong>月残業</strong>: 月内合計が <strong>45h（36協定上限）</strong>を超えるとアラート</li>
+    <li><strong>深夜労働</strong>: 22:00〜翌5:00 に該当する時間（深夜またぎ勤務にも対応）</li>
+  </ul>
+
+  <h3>休憩の扱い</h3>
+  <p>「一律 0.75h（45分）控除」のような旧来の仕組みは使いません。<code>break_start</code> と <code>break_end</code> 打刻ペアから<strong>実時間を計上</strong>します。</p>
+
+  <h3>未閉ペアの扱い</h3>
+  <ul>
+    <li><strong>退勤打刻なし</strong>：その日の労働時間は「不明」扱い（黄色アラート）</li>
+    <li><strong>休憩終わり打刻なし</strong>：その休憩は計上せず、退勤時にセッション終了</li>
+    <li>いずれも <code>/admin</code> から手動補正可能（履歴は editLogs に残る）</li>
+  </ul>
+</section>
+</div>
+
+<!-- ============ 13. PWA ============ -->
+<div class="page">
+<section id="pwa">
+  <div class="section-num">13 &nbsp; PWA</div>
+  <h2 class="sec">ホーム画面に追加（PWA）</h2>
+  <p class="lede">
+    スマホ・タブレット・PC のホーム画面にアイコンを置けば、<br>
+    ブラウザを開かずに直接起動できます。毎日使うなら必須。
+  </p>
+
+  <div class="two-col">
+    <div>
+      <h4>iPhone / iPad（Safari）</h4>
+      <ol style="font-size:14px">
+        <li>Safari で URL を開く</li>
+        <li>下部の共有アイコン（□と↑）</li>
+        <li>「ホーム画面に追加」</li>
+        <li>名前を確認 →「追加」</li>
+      </ol>
+    </div>
+    <div>
+      <h4>Android（Chrome）</h4>
+      <ol style="font-size:14px">
+        <li>Chrome で URL を開く</li>
+        <li>右上「⋮」メニュー</li>
+        <li>「アプリをインストール」<br>または「ホーム画面に追加」</li>
+      </ol>
+    </div>
+  </div>
+
+  <h4>PC（Chrome / Edge）</h4>
+  <ol style="font-size:14px">
+    <li>URL バー右端のインストールアイコン（モニタに↓のマーク）をクリック</li>
+    <li>「インストール」</li>
+  </ol>
+
+  <div class="callout tip">
+    <span class="label">ご利益</span>
+    <div class="body">
+      <p>ホーム画面に追加すると：</p>
+      <ul style="margin:6px 0;padding-left:18px;font-size:14px">
+        <li>アイコンから一発起動（ブラウザを経由しない）</li>
+        <li>全画面表示（アドレスバーが消えてアプリ感が増す）</li>
+        <li>オフライン時も画面のスケルトンは表示される（打刻には通信必須）</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ============ 14. FAQ ============ -->
+<div class="page">
+<section id="faq">
+  <div class="section-num">14 &nbsp; FAQ</div>
+  <h2 class="sec">よくある質問</h2>
+  <p class="lede">困ったときの目次。これに無い問題は office に連絡してください。</p>
+
+  <div class="faq">
+    <details>
+      <summary>打刻ボタンがグレーアウトして押せない</summary>
+      <div class="answer"><div>
+        現在の状態と矛盾する打刻はできない仕様です。たとえば「勤務中」のときは出勤ボタンは押せません。状態を確認して、適切なボタンを押してください。状態がそもそもおかしい（実態とずれている）場合は <code>/admin</code> で過去の打刻を見直してもらいましょう。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>休憩終わりを押し忘れて退勤してしまった</summary>
+      <div class="answer"><div>
+        その休憩は<strong>計上されません</strong>（未閉ペア扱い）。<code>/admin</code>（manager 以上）から該当日に <code>break_end</code> 打刻を追加してください。理由欄に「休憩終わり打刻漏れ」と書いておくと監査時に分かりやすいです。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>退勤後にテレワークで仕事を再開したい</summary>
+      <div class="answer"><div>
+        もう一度「出勤」ボタンを押せば、新しいセッションが始まります。退勤後の移動・休憩時間は労働時間に含まれません。1日の最終的な実働は両セッションの合計です。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>全員分ダウンロードしたファイルにアラートが出ない</summary>
+      <div class="answer"><div>
+        アラートはサマリシートの「アラート」列と、各人シート上部の「⚠」行に出ます。Excel・Numbers の<strong>下部のシートタブ</strong>で切り替えて確認してください。サマリしか見ていないと「アラートが無い」と勘違いしがちですが、その日のアラート（日8h超など）は各人シートに反映されています。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>過去の月のデータを再計算したい</summary>
+      <div class="answer"><div>
+        <code>/attendance</code> でその月を選んで「📊 生成」を押すと「再生成して上書きしますか？」と聞かれます。OK で最新の打刻状態（<code>/admin</code> での手動補正含む）から再集計されます。修正履歴 editLogs はそのまま残ります。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>自分の表示名を変えたい</summary>
+      <div class="answer"><div>
+        <code>/settings</code> の「表示名」欄を書き換えて「保存」。即時反映されます。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>同じメールで二重登録できますか？</summary>
+      <div class="answer"><div>
+        いいえ。1メール1アカウントです。すでに登録済みのメールでは「このメールアドレスは既に登録されています」と表示され、新規登録はできません。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>パスワードを忘れた</summary>
+      <div class="answer"><div>
+        現バージョンにはパスワードリセット機能がありません。office に連絡し、Firebase コンソールでパスワードリセットメールを送ってもらってください。日常的に使うパスワード管理アプリ（純正の iCloud / Google）を使うと忘れる事故そのものが減ります。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>打刻データが他人に見えるのは問題ない？</summary>
+      <div class="answer"><div>
+        社内利用前提のため、認証済みユーザーは全員の打刻状況を閲覧できます。「誰がいつ来てるか」を全員で見える化するための仕様です。<strong>URL は社外に出さないでください。</strong>
+      </div></div>
+    </details>
+
+    <details>
+      <summary>オフラインでも打刻できる？</summary>
+      <div class="answer"><div>
+        打刻には認証＋RTDB通信が必要です。完全オフライン状態では失敗します。Wi-Fi が不安定な場所で使う場合は、ネットワーク復帰後に再度試してください。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>ボタンが反応しない／表示が古い</summary>
+      <div class="answer"><div>
+        Service Worker のキャッシュが原因の場合があります。ブラウザで「ハードリロード」（Ctrl+Shift+R / Cmd+Shift+R）を試してください。それでも直らないなら、一度ホーム画面のアイコンを削除して再追加すると確実です。
+      </div></div>
+    </details>
+
+    <details>
+      <summary>新入社員が入った／辞めた</summary>
+      <div class="answer"><div>
+        <strong>新入：</strong>office が <code>/employees</code> で「新規追加」する → 本人がサインアップ → office が <code>/settings</code> で必要なら昇格。
+        <strong>退職：</strong><code>/employees</code> で在籍チェックを外す（過去履歴は残る）。完全削除は半年以上たってからを推奨。
+      </div></div>
+    </details>
+  </div>
+</section>
+
+<!-- QRC -->
+<div class="qrc">
+  <h2>ACCESS</h2>
+  <div class="qrc-grid">
+    <div>
+      <h4>本番URL</h4>
+      <ul>
+        <li><span class="icon">▸</span> attendance-app-b047c.web.app</li>
+        <li><span class="icon">▸</span> /punch（打刻）</li>
+        <li><span class="icon">▸</span> /today（一覧）</li>
+        <li><span class="icon">▸</span> /period（期間）</li>
+      </ul>
+    </div>
+    <div>
+      <h4>管理者向けURL</h4>
+      <ul>
+        <li><span class="icon">▸</span> /admin（修正）</li>
+        <li><span class="icon">▸</span> /employees（マスタ）</li>
+        <li><span class="icon">▸</span> /attendance（社労士）</li>
+        <li><span class="icon">▸</span> /settings（権限）</li>
+      </ul>
+    </div>
+    <div>
+      <h4>サポート</h4>
+      <ul>
+        <li><span class="icon">▸</span> office: 向井 達也</li>
+        <li><span class="icon">▸</span> mukai_tatsuya@rivan.com</li>
+        <li><span class="icon">▸</span> GitHub: lifdubhsliuhsf/<wbr>minna-shukkinbo</li>
+      </ul>
+    </div>
+  </div>
+</div>
 
 </div>
+
+<!-- ============ FOOTER ============ -->
+<footer class="end">
+  <div class="seal">了</div>
+  <div>みんなの出勤簿 取扱説明書 ／ Ver.1.0</div>
+  <div style="margin-top:6px;font-family:'BIZ UDPGothic',sans-serif;letter-spacing:0;font-size:11px">
+    このマニュアルは2026年4月時点の仕様に基づきます。<br>
+    不明点・改善提案は office (向井) までお知らせください。
+  </div>
+</footer>
 
 </body>
 </html>
