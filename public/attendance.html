@@ -37,15 +37,15 @@
   </header>
 
   <main class="px-3 py-3 space-y-4">
-    <!-- ① 月次アップロード -->
+    <!-- ① 月選択 -->
     <section class="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-2">
-      <div class="text-sm font-semibold">① タイムカード（毎月）</div>
-      <label for="fileInput" class="block border-2 border-dashed border-gray-300 rounded p-4 text-center cursor-pointer hover:bg-gray-50">
-        <div class="text-gray-700 text-sm font-semibold">タイムカードExcelを選択 / ドロップ</div>
-        <div class="text-xs text-gray-500 mt-1">例：ボーイタイムカード202603.xls</div>
-        <input id="fileInput" type="file" accept=".xls,.xlsx" class="hidden">
-      </label>
-      <div id="fileStatus" class="text-xs text-gray-500"></div>
+      <div class="text-sm font-semibold">① 対象月を選んで生成</div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <input id="ymInput" type="month" class="border border-gray-300 rounded px-3 py-1.5 text-sm">
+        <button id="genBtn" class="text-xs bg-gray-900 text-white px-3 py-1.5 rounded font-bold">📊 生成</button>
+        <span id="genStatus" class="text-xs text-gray-500"></span>
+      </div>
+      <div class="text-[11px] text-gray-500"><code>/punch</code> で記録された打刻データから出勤簿を集計し、社労士提出用xlsxを生成します。</div>
       <div id="errorBox" class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2"></div>
     </section>
 
@@ -121,14 +121,17 @@
 </div>
 
 <script type="module">
-  import { parseTimecardWorkbook, rebuildRecordsFromRaw, exportAllToXlsx, exportOneToXlsx } from '/js/attendance.js';
+  import { rebuildRecordsFromRaw, exportAllToXlsx, exportOneToXlsx } from '/js/attendance.js';
   import {
     saveMonth, loadMonth, listMonths, deleteMonth,
     saveEdit, loadEdits,
     monthDataToPeople, applyEdits,
   } from '/js/attendance-store.js';
   import { requireRole } from '/js/auth-guard.js';
-  import { escapeHtml } from '/js/firebase-init.js';
+  import {
+    db, ref, get, query, orderByChild, equalTo,
+    escapeHtml, computeWorkHours
+  } from '/js/firebase-init.js';
   import { renderBottomNav } from '/js/layout.js';
 
   const me = await requireRole(['office']);
@@ -182,38 +185,109 @@
     await loadSavedMonth(state.year, state.month);
   }
 
-  const drop = $('fileInput').parentElement;
-  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('bg-gray-50'); });
-  drop.addEventListener('dragleave', () => drop.classList.remove('bg-gray-50'));
-  drop.addEventListener('drop', e => {
-    e.preventDefault(); drop.classList.remove('bg-gray-50');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-  });
-  $('fileInput').addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+  // 既定の対象月: 当月
+  {
+    const now = new Date();
+    $('ymInput').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+  $('genBtn').addEventListener('click', generateFromRtdb);
 
-  async function handleFile(file) {
+  /** /punches → 月別 records へ集計し、saveMonth で永続化 */
+  async function generateFromRtdb() {
     hideErr();
-    $('fileStatus').textContent = `読み込み中: ${file.name}`;
+    const ym = $('ymInput').value;
+    if (!ym || !/^\d{4}-\d{2}$/.test(ym)) { showErr('対象月を選択してください'); return; }
+    const [year, month] = ym.split('-').map(Number);
+    $('genStatus').textContent = `${year}年${month}月 を集計中…`;
     try {
-      const buf = await file.arrayBuffer();
-      const { records, year, month } = parseTimecardWorkbook(buf, { filename: file.name });
-      state.records = records; state.year = year; state.month = month;
-      state.edits = {};
+      // 1. employees + punches (期間: H1 + H2) を取得
+      const [empSnap, h1Snap, h2Snap] = await Promise.all([
+        get(ref(db, 'employees')),
+        get(query(ref(db, 'punches'), orderByChild('periodKey'), equalTo(`${ym}-H1`))),
+        get(query(ref(db, 'punches'), orderByChild('periodKey'), equalTo(`${ym}-H2`))),
+      ]);
+      const employees = empSnap.val() || {};
+      const punches = [];
+      h1Snap.forEach(c => { punches.push({ id: c.key, ...c.val() }); return false; });
+      h2Snap.forEach(c => { punches.push({ id: c.key, ...c.val() }); return false; });
+
+      // 2. 既存上書きの確認
       const existing = await loadMonth(year, month);
-      if (existing && !confirm(`${year}年${month}月のデータは既に保存されています。上書きしますか？`)) {
-        $('fileStatus').textContent = 'キャンセル（既存データを読み直します）';
+      if (existing && !confirm(`${year}年${month}月のデータは既に保存されています。再生成して上書きしますか？`)) {
+        $('genStatus').textContent = 'キャンセル（既存を読み直します）';
         await loadSavedMonth(year, month);
         return;
       }
-      await saveMonth(year, month, records, { filename: file.name }, me.id);
+
+      // 3. people 配列に変換
+      const byEmp = {};
+      for (const p of punches) {
+        if (!byEmp[p.employeeId]) byEmp[p.employeeId] = {};
+        if (!byEmp[p.employeeId][p.dateKey]) byEmp[p.employeeId][p.dateKey] = [];
+        byEmp[p.employeeId][p.dateKey].push(p);
+      }
+      const dim = new Date(year, month, 0).getDate();
+      const fmtTime = (ts) => {
+        const d = new Date(ts);
+        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      };
+      const toFracHours = (ts) => {
+        const d = new Date(ts);
+        return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+      };
+      const people = [];
+      for (const [empId, emp] of Object.entries(employees)) {
+        if (emp.active === false) continue;
+        const empByDate = byEmp[empId] || {};
+        // 月内に1件も打刻がない人はスキップ（空のシートが大量に出るのを防ぐ）
+        if (Object.keys(empByDate).length === 0) continue;
+        const days = [];
+        for (let d = 1; d <= dim; d++) {
+          const dateKey = `${ym}-${String(d).padStart(2, '0')}`;
+          const ps = empByDate[dateKey] || [];
+          if (ps.length === 0) { days.push({ day: d }); continue; }
+          const c = computeWorkHours(ps);
+          days.push({
+            day: d,
+            actualInRaw:  c.firstIn ? fmtTime(c.firstIn) : '',
+            actualOutRaw: c.lastOut ? fmtTime(c.lastOut) : '',
+            actualIn:     c.firstIn ? toFracHours(c.firstIn) : null,
+            actualOut:    c.lastOut ? toFracHours(c.lastOut) : null,
+            schedIn: null, schedOut: null,
+            laborHours: (c.hasIn && c.hasOut) ? c.workMs / 3600000 : null,
+            _breakH: c.breakMs / 3600000,
+          });
+        }
+        people.push({ id: empId, name: emp.name, dept: emp.dept || '', year, month, days });
+      }
+
+      if (people.length === 0) {
+        $('genStatus').textContent = '';
+        showErr(`${year}年${month}月 に打刻データが見つかりません。/punch で打刻してから再度生成してください。`);
+        return;
+      }
+
+      // 4. 残業/深夜/週40h集計を反映
+      const records = rebuildRecordsFromRaw(people, year, month);
+      // 5. 実休憩時間で breakH を上書き（一律0.75h置き換え）
+      for (const rec of records) {
+        for (const row of rec.rows) {
+          const day = (rec._rawDays || []).find(d => d.day === row.day);
+          if (day && day._breakH != null) row.breakH = Math.round(day._breakH * 100) / 100;
+        }
+      }
+      state.records = records; state.year = year; state.month = month; state.edits = {};
+
+      // 6. /attendance/months/{ym} に保存
+      await saveMonth(year, month, records, { filename: `自動生成 (${punches.length} 打刻)` }, me.id);
       renderSummary();
       await refreshMonthsList();
-      $('fileStatus').textContent = `${file.name} ✓ 保存完了（${records.length}名）`;
-      flash(`${year}年${month}月を保存しました`);
+      $('genStatus').textContent = `✓ 生成完了（${records.length}名 / ${punches.length} 打刻）`;
+      flash(`${year}年${month}月を生成・保存しました`);
     } catch (err) {
       console.error(err);
-      showErr('エラー: ' + err.message);
-      $('fileStatus').textContent = '';
+      showErr('生成エラー: ' + err.message);
+      $('genStatus').textContent = '';
     }
   }
 
