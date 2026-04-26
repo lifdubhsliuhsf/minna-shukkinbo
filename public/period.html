@@ -36,7 +36,8 @@
 <script type="module">
   import {
     db, ref, onValue, query, orderByChild, equalTo, set, get, serverTimestamp,
-    periodKeyFromDate, periodRange, currentPeriodKey, dateKeyJST, fmtHHmm, escapeHtml
+    periodKeyFromDate, periodRange, currentPeriodKey, dateKeyJST, fmtHHmm, escapeHtml,
+    computeWorkHours, msToHours
   } from '/js/firebase-init.js';
   import { requireAuth } from '/js/auth-guard.js';
   import { renderHeader, renderBottomNav, showFlash } from '/js/layout.js';
@@ -178,24 +179,21 @@
       .map(id => ({ id, ...employees[id] }))
       .filter(e => e.active !== false && e.name)
       .sort((a, b) => (a.workNo || 0) - (b.workNo || 0));
+    // matrix[empId][dateKey] = punches[]
     const matrix = {};
     for (const p of punches) {
       if (!matrix[p.employeeId]) matrix[p.employeeId] = {};
-      if (!matrix[p.employeeId][p.dateKey]) matrix[p.employeeId][p.dateKey] = { ins: [], outs: [] };
-      (p.type === 'in' ? matrix[p.employeeId][p.dateKey].ins : matrix[p.employeeId][p.dateKey].outs).push(p);
+      if (!matrix[p.employeeId][p.dateKey]) matrix[p.employeeId][p.dateKey] = [];
+      matrix[p.employeeId][p.dateKey].push(p);
     }
     let missingOut = 0, totalHours = 0;
     for (const emp of emps) {
       for (const day of days) {
-        const cell = matrix[emp.id]?.[day.key];
-        if (!cell) continue;
-        if (cell.ins.length > 0 && cell.outs.length === 0) missingOut++;
-        if (cell.ins.length > 0 && cell.outs.length > 0) {
-          const firstIn = Math.min(...cell.ins.map(p => p.timestamp));
-          const lastOut = Math.max(...cell.outs.map(p => p.timestamp));
-          const hrs = (lastOut - firstIn) / 3600000 - 1;
-          if (hrs > 0) totalHours += hrs;
-        }
+        const ps = matrix[emp.id]?.[day.key];
+        if (!ps || ps.length === 0) continue;
+        const c = computeWorkHours(ps);
+        if (c.hasIn && !c.hasOut) missingOut++;
+        if (c.hasIn && c.hasOut) totalHours += msToHours(c.workMs);
       }
     }
     document.getElementById('cardEmpCount').textContent = emps.length;
@@ -219,21 +217,20 @@
     const bodyRows = emps.map(emp => {
       let empDays = 0, empHours = 0;
       const cells = days.map(d => {
-        const cell = matrix[emp.id]?.[d.key];
-        if (!cell || (cell.ins.length === 0 && cell.outs.length === 0)) {
+        const ps = matrix[emp.id]?.[d.key];
+        if (!ps || ps.length === 0) {
           const wkCls = d.weekday === 0 ? 'cell-sunday' : (d.weekday === 6 ? 'cell-saturday' : '');
           return `<td class="${wkCls} cell-missing text-center">—</td>`;
         }
-        const firstIn = cell.ins.length ? Math.min(...cell.ins.map(p => p.timestamp)) : null;
-        const lastOut = cell.outs.length ? Math.max(...cell.outs.map(p => p.timestamp)) : null;
+        const c = computeWorkHours(ps);
         let cls = 'cell-present', text = '';
-        if (firstIn && lastOut) {
-          const hrs = (lastOut - firstIn) / 3600000 - 1;
-          if (hrs > 0) empHours += hrs;
-          empDays++;
-          text = `<div class="text-[11px]">${fmtHHmm(firstIn)}</div><div class="text-[11px] text-gray-600">${fmtHHmm(lastOut)}</div>`;
-        } else if (firstIn) { cls = 'cell-warn'; text = `<div class="text-[11px]">${fmtHHmm(firstIn)}</div><div class="text-[11px] text-yellow-700">出のみ</div>`; }
-        else if (lastOut)   { cls = 'cell-warn'; text = `<div class="text-[11px] text-yellow-700">退のみ</div><div class="text-[11px]">${fmtHHmm(lastOut)}</div>`; }
+        if (c.hasIn && c.hasOut) {
+          const hrs = msToHours(c.workMs);
+          empHours += hrs; empDays++;
+          const extra = (c.breakMs || c.leaveMs) ? `<div class="text-[10px] text-gray-500">休${msToHours(c.breakMs).toFixed(1)}/退${msToHours(c.leaveMs).toFixed(1)}</div>` : '';
+          text = `<div class="text-[11px]">${fmtHHmm(c.firstIn)}</div><div class="text-[11px] text-gray-600">${fmtHHmm(c.lastOut)}</div>${extra}`;
+        } else if (c.hasIn) { cls = 'cell-warn'; text = `<div class="text-[11px]">${fmtHHmm(c.firstIn)}</div><div class="text-[11px] text-yellow-700">出のみ</div>`; }
+        else if (c.hasOut)   { cls = 'cell-warn'; text = `<div class="text-[11px] text-yellow-700">退のみ</div><div class="text-[11px]">${fmtHHmm(c.lastOut)}</div>`; }
         return `<td class="${cls} text-center">${text}</td>`;
       }).join('');
       return `
@@ -266,24 +263,25 @@
     const matrix = {};
     for (const p of punches) {
       if (!matrix[p.employeeId]) matrix[p.employeeId] = {};
-      if (!matrix[p.employeeId][p.dateKey]) matrix[p.employeeId][p.dateKey] = { ins: [], outs: [] };
-      (p.type === 'in' ? matrix[p.employeeId][p.dateKey].ins : matrix[p.employeeId][p.dateKey].outs).push(p);
+      if (!matrix[p.employeeId][p.dateKey]) matrix[p.employeeId][p.dateKey] = [];
+      matrix[p.employeeId][p.dateKey].push(p);
     }
-    const rows = [['社員ID','氏名','部門','日付','曜日','出勤','退勤','実働時間(簡易)','備考']];
+    const rows = [['社員ID','氏名','部門','日付','曜日','出勤','退勤','休憩h','退出h','実働h','備考']];
     const wlabel = ['日','月','火','水','木','金','土'];
     for (const emp of emps) {
       for (const dateKey of days) {
-        const cell = matrix[emp.id]?.[dateKey];
+        const ps = matrix[emp.id]?.[dateKey];
         const wd = new Date(dateKey).getDay();
-        if (!cell) { rows.push([emp.id, emp.name, emp.dept||'', dateKey, wlabel[wd], '', '', '', '']); continue; }
-        const firstIn = cell.ins.length ? Math.min(...cell.ins.map(p => p.timestamp)) : null;
-        const lastOut = cell.outs.length ? Math.max(...cell.outs.map(p => p.timestamp)) : null;
+        if (!ps || ps.length === 0) { rows.push([emp.id, emp.name, emp.dept||'', dateKey, wlabel[wd], '', '', '', '', '', '']); continue; }
+        const c = computeWorkHours(ps);
         let hrs = '', note = '';
-        if (firstIn && lastOut) { const h = (lastOut - firstIn) / 3600000 - 1; hrs = h > 0 ? h.toFixed(2) : '0.00'; }
-        else if (firstIn) note = '退勤打刻なし';
-        else if (lastOut) note = '出勤打刻なし';
+        if (c.hasIn && c.hasOut) hrs = msToHours(c.workMs).toFixed(2);
+        else if (c.hasIn)  note = '退勤打刻なし';
+        else if (c.hasOut) note = '出勤打刻なし';
         rows.push([emp.id, emp.name, emp.dept||'', dateKey, wlabel[wd],
-          firstIn ? fmtHHmm(firstIn) : '', lastOut ? fmtHHmm(lastOut) : '', hrs, note]);
+          c.firstIn ? fmtHHmm(c.firstIn) : '', c.lastOut ? fmtHHmm(c.lastOut) : '',
+          msToHours(c.breakMs).toFixed(2), msToHours(c.leaveMs).toFixed(2),
+          hrs, note]);
       }
     }
     const csv = '﻿' + rows.map(r => r.map(c => {

@@ -37,7 +37,7 @@
       ".indexOn": ["employeeId", "periodKey", "dateKey", "timestamp"],
       "$punchId": {
         ".write": "auth != null && (!data.exists() || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'office')",
-        ".validate": "newData.hasChildren(['employeeId','type','timestamp','dateKey','periodKey']) && (newData.child('type').val() === 'in' || newData.child('type').val() === 'out') && (root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'office' || newData.child('timestamp').val() === now)"
+        ".validate": "newData.hasChildren(['employeeId','type','timestamp','dateKey','periodKey']) && (newData.child('type').val() === 'in' || newData.child('type').val() === 'out' || newData.child('type').val() === 'break_start' || newData.child('type').val() === 'break_end' || newData.child('type').val() === 'leave_start' || newData.child('type').val() === 'leave_end') && (root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('role').val() === 'office' || newData.child('timestamp').val() === now)"
       }
     },
 
