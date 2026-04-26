@@ -664,10 +664,27 @@ export function recordToAoa(rec, storeName = '') {
   const displayName = rec.fullName || rec.name;
   const store = rec.store || storeName;
   const grade = rec.grade ? `（${rec.grade}）` : '';
-  const header1 = [`名前: ${displayName}${grade}`, `作業番号: ${rec.id}`, `所属する店舗: ${store}`, `年月: ${rec.year}/${String(rec.month).padStart(2, '0')}`];
+  const dept  = rec.dept ? `部門: ${rec.dept}` : '';
+  const header1 = [`名前: ${displayName}${grade}`, `作業番号: ${rec.id}`, dept || `所属する店舗: ${store}`, `年月: ${rec.year}/${String(rec.month).padStart(2, '0')}`];
+
+  // 集計アラートを上部に表示
+  const flags = [];
+  if (rec.monthAlerts && rec.monthAlerts.length) flags.push(...rec.monthAlerts);
+  const anyWeek = rec.rows.some(row => row.alerts.some(a => a.startsWith('週')));
+  const anyDay  = rec.rows.some(row => row.alerts.some(a => a.startsWith('日')));
+  const anyIncomplete = rec.rows.some(row => row.incomplete);
+  const anyEdit = rec.rows.some(row => row.edited);
+  if (anyWeek)       flags.push('週40h超あり');
+  if (anyDay)        flags.push('日8h超あり');
+  if (anyIncomplete) flags.push('打刻漏れあり');
+  if (anyEdit)       flags.push('編集あり');
+  const alertLine = flags.length ? [`⚠ ${flags.join(' / ')}`] : [];
+
   const sep = ['', '', '', '', '', '', '', '', ''];
   const colHeader = ['日付', '出勤時間', '退勤時間', '休憩時間', '労働時間', '残業時間', '深夜労働時間', '残業時間累計[週]', 'アラート'];
-  const aoa = [header1, sep, colHeader];
+  const aoa = [header1];
+  if (alertLine.length) aoa.push(alertLine);
+  aoa.push(sep, colHeader);
   for (const row of rec.rows) {
     aoa.push([
       `${rec.month}/${row.day}(${row.weekday})`,
@@ -733,26 +750,39 @@ function aoaToWs(aoa, opts) {
 export function exportAllToXlsx(records, { storeName = '', filename = '出勤簿.xlsx' } = {}) {
   const XLSX = window.XLSX;
   const wb = XLSX.utils.book_new();
-  // サマリ（全員1枚）
-  const summary = [['作業番号', '氏名', '所属店舗', 'グレード', '部門', '総労働時間', '総残業時間', '総深夜労働時間', '月次アラート']];
+  // 1. サマリシート: 全員1行 + アラート集計
+  const summary = [['作業番号', '氏名', '部門', '総労働時間', '総残業時間', '総深夜時間', 'アラート']];
   for (const r of records) {
+    const flags = [];
+    if (r.monthAlerts && r.monthAlerts.length) flags.push(...r.monthAlerts);
+    const anyWeek = r.rows.some(row => row.alerts.some(a => a.startsWith('週')));
+    const anyDay  = r.rows.some(row => row.alerts.some(a => a.startsWith('日')));
+    const anyIncomplete = r.rows.some(row => row.incomplete);
+    const anyEdit = r.rows.some(row => row.edited);
+    if (anyWeek)       flags.push('週40h超あり');
+    if (anyDay)        flags.push('日8h超あり');
+    if (anyIncomplete) flags.push('打刻漏れ');
+    if (anyEdit)       flags.push('編集あり');
     summary.push([
       r.id,
       r.fullName || r.name,
-      r.store || '',
-      r.grade || '',
-      r.dept,
-      r.totals.workH, r.totals.overtimeH, r.totals.nightH,
-      r.monthAlerts.join('／'),
+      r.dept || '',
+      r.totals.workH,
+      r.totals.overtimeH,
+      r.totals.nightH,
+      flags.join('／'),
     ]);
   }
   XLSX.utils.book_append_sheet(wb, aoaToWs(summary), 'サマリ');
 
-  // 各人シート
-  const used = new Set();
+  // 2. 各人シート: E001_上野 形式で識別性を確保
+  const used = new Set(['サマリ']);
   for (const r of records) {
     const aoa = recordToAoa(r, storeName);
-    let base = (r.fullName || r.name || `ID${r.id}`).replace(/[\/\\\?\*\[\]:]/g, '_').slice(0, 28);
+    const safeId   = String(r.id || '').replace(/[\/\\\?\*\[\]:]/g, '_');
+    const safeName = String(r.fullName || r.name || '').replace(/[\/\\\?\*\[\]:]/g, '_');
+    let base = (safeId && safeName) ? `${safeId}_${safeName}` : (safeName || safeId || `ID${r.id}`);
+    base = base.slice(0, 28);
     let name = base;
     let i = 2;
     while (used.has(name)) name = `${base.slice(0, 25)}_${i++}`;
