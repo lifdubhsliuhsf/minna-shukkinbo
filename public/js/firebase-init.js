@@ -131,18 +131,29 @@ export function getCurrentStatus(punches) {
 }
 
 /**
- * 1日分の punches から実働時間 (ms) を計算。
- * 仕様：
- *   workMs = (lastOut - firstIn) - sum(break_end - break_start)
- *   未閉じの break_start は無視（戻り打刻が無い → カウントしない）
+ * 1日分の punches から実働時間 (ms) を計算（マルチセッション対応）。
  *
- * 戻り値: { firstIn, lastOut, workMs, breakMs, hasIn, hasOut, status }
+ * 仕様：
+ *   状態を時系列に走査して 'working' 区間の合計を workMs に加算する。
+ *   - 1日に複数回の in/out（テレワークで再出勤など）→ 各セッションを個別に加算
+ *     セッション間のギャップ（一旦退勤 → 移動 → 再出勤）は実働に含まれない
+ *   - 複数回の break_start/break_end → 各休憩を個別に加算
+ *   - 未閉ペアは無視（戻り打刻なし → 計上しない）
+ *
+ * 戻り値: { firstIn, lastOut, workMs, breakMs, hasIn, hasOut, status, sessions }
+ *   sessions = 完結した (in→out) セッション数
  */
 export function computeWorkHours(punches) {
-  const result = { firstIn: null, lastOut: null, workMs: 0, breakMs: 0, hasIn: false, hasOut: false, status: 'none' };
+  const result = {
+    firstIn: null, lastOut: null,
+    workMs: 0, breakMs: 0,
+    hasIn: false, hasOut: false,
+    status: 'none', sessions: 0
+  };
   if (!punches || !punches.length) return result;
   const sorted = [...punches].sort((a, b) => a.timestamp - b.timestamp);
 
+  // 表示用 firstIn / lastOut
   for (const p of sorted) {
     if (p.type === 'in' && result.firstIn === null) result.firstIn = p.timestamp;
     if (p.type === 'out') result.lastOut = p.timestamp;
@@ -150,18 +161,44 @@ export function computeWorkHours(punches) {
   result.hasIn  = result.firstIn !== null;
   result.hasOut = result.lastOut !== null;
 
-  let openBreak = null;
+  // 状態マシン走査
+  let state = 'none';
+  let workStart = null, breakStart = null;
+
   for (const p of sorted) {
-    if (p.type === 'break_start') openBreak = p.timestamp;
-    else if (p.type === 'break_end' && openBreak != null) { result.breakMs += p.timestamp - openBreak; openBreak = null; }
+    if (p.type === 'in') {
+      if (state === 'none' || state === 'done') {
+        workStart = p.timestamp;
+        state = 'working';
+      }
+      // duplicate in は無視
+    } else if (p.type === 'out') {
+      if (state === 'working' && workStart != null) {
+        result.workMs += p.timestamp - workStart;
+        result.sessions++;
+      } else if (state === 'on_break') {
+        // 休憩中の直帰：未閉休憩はカウントしない、セッション完結扱いにはする
+        result.sessions++;
+      }
+      workStart = null; breakStart = null;
+      state = 'done';
+    } else if (p.type === 'break_start') {
+      if (state === 'working' && workStart != null) {
+        result.workMs += p.timestamp - workStart;
+        workStart = null;
+        breakStart = p.timestamp;
+        state = 'on_break';
+      }
+    } else if (p.type === 'break_end') {
+      if (state === 'on_break' && breakStart != null) {
+        result.breakMs += p.timestamp - breakStart;
+        breakStart = null;
+        workStart = p.timestamp;
+        state = 'working';
+      }
+    }
   }
-
-  if (result.hasIn && result.hasOut) {
-    const span = result.lastOut - result.firstIn;
-    result.workMs = Math.max(0, span - result.breakMs);
-  }
-
-  result.status = getCurrentStatus(sorted);
+  result.status = state;
   return result;
 }
 

@@ -1,4 +1,4 @@
-const CACHE = 'minna-shukkinbo-v4';
+const CACHE = 'minna-shukkinbo-v5';
 
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(

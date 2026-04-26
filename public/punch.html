@@ -94,11 +94,10 @@
           <div id="statusValue" class="text-xl font-bold">-</div>
         </div>
         <div class="grid grid-cols-2 gap-3 mt-4">
-          <button id="btnIn"    class="btn-punch kiosk-btn btn-in"    disabled>出 勤</button>
-          <button id="btnOut"   class="btn-punch kiosk-btn btn-out"   disabled>退 勤</button>
-        </div>
-        <div class="grid grid-cols-1 gap-3 mt-3">
-          <button id="btnBreak" class="btn-punch kiosk-btn btn-break" style="min-height:90px; font-size:clamp(18px,3vw,28px);" disabled>休 憩</button>
+          <button id="btnIn"       class="btn-punch kiosk-btn btn-in"        disabled>出 勤</button>
+          <button id="btnOut"      class="btn-punch kiosk-btn btn-out"       disabled>退 勤</button>
+          <button id="btnBreak"    class="btn-punch kiosk-btn btn-break"     style="min-height:90px; font-size:clamp(18px,3vw,28px);" disabled>休 憩</button>
+          <button id="btnBreakEnd" class="btn-punch kiosk-btn btn-break-end" style="min-height:90px; font-size:clamp(18px,3vw,28px);" disabled>休憩終わり</button>
         </div>
         <div id="logs" class="bg-white rounded-xl border border-gray-200 p-4 text-sm mt-4">
           <div class="text-gray-400 text-center py-2">氏名を選ぶと本日の打刻履歴が表示されます</div>
@@ -224,23 +223,20 @@
   }
 
   function setButtons(status) {
-    const btnIn    = document.getElementById('btnIn');
-    const btnOut   = document.getElementById('btnOut');
-    const btnBreak = document.getElementById('btnBreak');
-    [btnIn, btnOut, btnBreak].forEach(b => { b.disabled = true; b.classList.remove('active'); });
-    btnBreak.textContent = '休 憩';
-    btnBreak.dataset.action = 'break_start';
+    const btnIn       = document.getElementById('btnIn');
+    const btnOut      = document.getElementById('btnOut');
+    const btnBreak    = document.getElementById('btnBreak');
+    const btnBreakEnd = document.getElementById('btnBreakEnd');
+    [btnIn, btnOut, btnBreak, btnBreakEnd].forEach(b => { b.disabled = true; b.classList.remove('active'); });
 
     if (status === 'none' || status === 'done') {
-      btnIn.disabled = false;
+      btnIn.disabled = false; // 'done' のとき = テレワークで再出勤
     } else if (status === 'working') {
       btnOut.disabled = false;
       btnBreak.disabled = false;
     } else if (status === 'on_break') {
-      btnBreak.disabled = false;
-      btnBreak.textContent = '休憩終了';
-      btnBreak.classList.add('active');
-      btnBreak.dataset.action = 'break_end';
+      btnBreakEnd.disabled = false;
+      btnBreakEnd.classList.add('active');
       btnOut.disabled = false; // 休憩中の直帰も許容
     }
   }
@@ -282,7 +278,8 @@
 
   document.getElementById('btnIn').addEventListener('click', () => doPunch('in'));
   document.getElementById('btnOut').addEventListener('click', () => doPunch('out'));
-  document.getElementById('btnBreak').addEventListener('click', (e) => doPunch(e.currentTarget.dataset.action || 'break_start'));
+  document.getElementById('btnBreak').addEventListener('click', () => doPunch('break_start'));
+  document.getElementById('btnBreakEnd').addEventListener('click', () => doPunch('break_end'));
 
   async function doPunch(type) {
     const empId = selectEl.value;
