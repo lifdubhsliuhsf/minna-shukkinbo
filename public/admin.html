@@ -61,8 +61,6 @@
               <option value="out">退勤</option>
               <option value="break_start">休憩開始</option>
               <option value="break_end">休憩終了</option>
-              <option value="leave_start">一時退出</option>
-              <option value="leave_end">戻り</option>
             </select>
           </div>
           <div>
@@ -132,10 +130,9 @@
       listEl.innerHTML = '<div class="text-gray-400 text-center py-4">この日の打刻はありません</div>';
       return;
     }
-    const TYPE_LABEL = { in:'出勤', out:'退勤', break_start:'休憩開始', break_end:'休憩終了', leave_start:'一時退出', leave_end:'戻り' };
+    const TYPE_LABEL = { in:'出勤', out:'退勤', break_start:'休憩開始', break_end:'休憩終了' };
     const TYPE_PILL  = { in:'bg-green-100 text-green-800', out:'bg-red-100 text-red-800',
-                          break_start:'bg-amber-100 text-amber-800', break_end:'bg-amber-50 text-amber-700',
-                          leave_start:'bg-indigo-100 text-indigo-800', leave_end:'bg-indigo-50 text-indigo-700' };
+                          break_start:'bg-amber-100 text-amber-800', break_end:'bg-amber-50 text-amber-700' };
     listEl.innerHTML = `
       <div class="text-xs font-bold text-gray-500 mb-2">${selectedDate} の打刻 (${currentPunches.length}件)</div>
       ${currentPunches.map(p => `

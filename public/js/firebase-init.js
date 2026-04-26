@@ -114,9 +114,9 @@ export function hasRole(profile, ...roles) {
   return roles.includes(profile.role);
 }
 
-// --- 打刻ヘルパ（6種: in / out / break_start / break_end / leave_start / leave_end）---
+// --- 打刻ヘルパ（4種: in / out / break_start / break_end）---
 
-/** punch リストから現在の状態を判定: 'none' | 'working' | 'on_break' | 'away' | 'done' */
+/** punch リストから現在の状態を判定: 'none' | 'working' | 'on_break' | 'done' */
 export function getCurrentStatus(punches) {
   if (!punches || !punches.length) return 'none';
   const sorted = [...punches].sort((a, b) => a.timestamp - b.timestamp);
@@ -126,8 +126,6 @@ export function getCurrentStatus(punches) {
     case 'out':          return 'done';
     case 'break_start':  return 'on_break';
     case 'break_end':    return 'working';
-    case 'leave_start':  return 'away';
-    case 'leave_end':    return 'working';
     default:             return 'none';
   }
 }
@@ -135,14 +133,13 @@ export function getCurrentStatus(punches) {
 /**
  * 1日分の punches から実働時間 (ms) を計算。
  * 仕様：
- *   workMs = (lastOut - firstIn) - sum(break) - sum(leave)
- *   未閉じの break_start / leave_start は無視（戻り打刻が無い → カウントしない）
- *   ペアが交差する場合は単純加算（実害なし、業務上ありえない）
+ *   workMs = (lastOut - firstIn) - sum(break_end - break_start)
+ *   未閉じの break_start は無視（戻り打刻が無い → カウントしない）
  *
- * 戻り値: { firstIn, lastOut, workMs, breakMs, leaveMs, hasIn, hasOut, status }
+ * 戻り値: { firstIn, lastOut, workMs, breakMs, hasIn, hasOut, status }
  */
 export function computeWorkHours(punches) {
-  const result = { firstIn: null, lastOut: null, workMs: 0, breakMs: 0, leaveMs: 0, hasIn: false, hasOut: false, status: 'none' };
+  const result = { firstIn: null, lastOut: null, workMs: 0, breakMs: 0, hasIn: false, hasOut: false, status: 'none' };
   if (!punches || !punches.length) return result;
   const sorted = [...punches].sort((a, b) => a.timestamp - b.timestamp);
 
@@ -153,18 +150,15 @@ export function computeWorkHours(punches) {
   result.hasIn  = result.firstIn !== null;
   result.hasOut = result.lastOut !== null;
 
-  // 休憩・退出ペアリング
-  let openBreak = null, openLeave = null;
+  let openBreak = null;
   for (const p of sorted) {
     if (p.type === 'break_start') openBreak = p.timestamp;
     else if (p.type === 'break_end' && openBreak != null) { result.breakMs += p.timestamp - openBreak; openBreak = null; }
-    else if (p.type === 'leave_start') openLeave = p.timestamp;
-    else if (p.type === 'leave_end' && openLeave != null) { result.leaveMs += p.timestamp - openLeave; openLeave = null; }
   }
 
   if (result.hasIn && result.hasOut) {
     const span = result.lastOut - result.firstIn;
-    result.workMs = Math.max(0, span - result.breakMs - result.leaveMs);
+    result.workMs = Math.max(0, span - result.breakMs);
   }
 
   result.status = getCurrentStatus(sorted);

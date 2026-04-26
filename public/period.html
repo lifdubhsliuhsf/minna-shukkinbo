@@ -35,7 +35,7 @@
 
 <script type="module">
   import {
-    db, ref, onValue, query, orderByChild, equalTo, set, get, serverTimestamp,
+    db, ref, onValue, query, orderByChild, equalTo,
     periodKeyFromDate, periodRange, currentPeriodKey, dateKeyJST, fmtHHmm, escapeHtml,
     computeWorkHours, msToHours
   } from '/js/firebase-init.js';
@@ -43,7 +43,6 @@
   import { renderHeader, renderBottomNav, showFlash } from '/js/layout.js';
 
   const me = await requireAuth();
-  const isOffice = me.role === 'office';
 
   const urlParams = new URLSearchParams(location.search);
   let currentKey = urlParams.get('period') || currentPeriodKey();
@@ -54,12 +53,9 @@
       <div class="flex items-center gap-2 mb-3 flex-wrap">
         <button id="prevBtn"  class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">← 前期間</button>
         <div id="periodLabel" class="font-bold text-lg">—</div>
-        <span id="lockBadge" class="hidden px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-bold">🔒 ロック済</span>
         <button id="nextBtn"  class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">次期間 →</button>
         <button id="todayBtn" class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">今期間</button>
         <div class="flex-1"></div>
-        ${isOffice ? `<button id="lockBtn" class="hidden px-3 py-1.5 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700 font-bold">🔒 期間をロック</button>
-                      <button id="unlockBtn" class="hidden px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300 font-bold">🔓 ロック解除</button>` : ''}
         <button id="csvBtn" class="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700 font-bold">⇩ CSV出力</button>
       </div>
 
@@ -87,7 +83,7 @@
       </div>
 
       <p class="text-xs text-gray-500 mt-3">
-        ※ 実働時間は (退勤 − 出勤 − 休憩1h固定) の簡易計算。詳細な深夜/残業/休日は <code>/attendance</code> で社労士提出xlsx生成（office）。<br>
+        ※ 実働時間は (退勤 − 出勤 − 休憩) で算出（休憩は休憩開始/終了の打刻ペアから集計）。<br>
         ※ 未退勤(黄)は打刻漏れの可能性。<code>/admin</code> から修正（manager/office）。
       </p>
     </main>
@@ -98,27 +94,6 @@
   document.getElementById('nextBtn').onclick = () => changePeriod(1);
   document.getElementById('todayBtn').onclick = () => { currentKey = currentPeriodKey(); refresh(); };
   document.getElementById('csvBtn').onclick = exportCsv;
-
-  if (isOffice) {
-    document.getElementById('lockBtn').onclick = async () => {
-      if (!confirm(`期間 ${currentKey} をロックしますか？(打刻追記は引き続き可能、後から解除可)`)) return;
-      try {
-        const [s, e] = periodRange(currentKey);
-        await set(ref(db, `periods/${currentKey}`), {
-          key: currentKey, start: s, end: e, status: 'closed',
-          locked_by: me.id, locked_at: serverTimestamp()
-        });
-        showFlash('ロックしました');
-      } catch (ex) { showFlash('失敗: ' + ex.message, 'err'); }
-    };
-    document.getElementById('unlockBtn').onclick = async () => {
-      if (!confirm(`期間 ${currentKey} のロックを解除しますか？`)) return;
-      try {
-        await set(ref(db, `periods/${currentKey}`), null);
-        showFlash('解除しました');
-      } catch (ex) { showFlash('失敗: ' + ex.message, 'err'); }
-    };
-  }
 
   function changePeriod(delta) {
     const [y, m, h] = currentKey.split('-');
@@ -138,28 +113,17 @@
   }
 
   let employees = {}, punches = [];
-  let unsubPunches = null, unsubPeriod = null;
+  let unsubPunches = null;
 
   onValue(ref(db, 'employees'), (snap) => { employees = snap.val() || {}; render(); });
 
   function loadData() {
     if (unsubPunches) unsubPunches();
-    if (unsubPeriod) unsubPeriod();
     const q = query(ref(db, 'punches'), orderByChild('periodKey'), equalTo(currentKey));
     unsubPunches = onValue(q, (snap) => {
       const arr = [];
       snap.forEach(c => { arr.push({ id: c.key, ...c.val() }); return false; });
       punches = arr; render();
-    });
-    unsubPeriod = onValue(ref(db, `periods/${currentKey}`), (snap) => {
-      const data = snap.val();
-      const locked = data && data.status === 'closed';
-      const lb = document.getElementById('lockBadge');
-      const lockBtn = document.getElementById('lockBtn');
-      const unlockBtn = document.getElementById('unlockBtn');
-      lb.classList.toggle('hidden', !locked);
-      if (lockBtn)   lockBtn.classList.toggle('hidden', locked);
-      if (unlockBtn) unlockBtn.classList.toggle('hidden', !locked);
     });
   }
   loadData();
@@ -227,7 +191,7 @@
         if (c.hasIn && c.hasOut) {
           const hrs = msToHours(c.workMs);
           empHours += hrs; empDays++;
-          const extra = (c.breakMs || c.leaveMs) ? `<div class="text-[10px] text-gray-500">休${msToHours(c.breakMs).toFixed(1)}/退${msToHours(c.leaveMs).toFixed(1)}</div>` : '';
+          const extra = c.breakMs ? `<div class="text-[10px] text-gray-500">休${msToHours(c.breakMs).toFixed(1)}h</div>` : '';
           text = `<div class="text-[11px]">${fmtHHmm(c.firstIn)}</div><div class="text-[11px] text-gray-600">${fmtHHmm(c.lastOut)}</div>${extra}`;
         } else if (c.hasIn) { cls = 'cell-warn'; text = `<div class="text-[11px]">${fmtHHmm(c.firstIn)}</div><div class="text-[11px] text-yellow-700">出のみ</div>`; }
         else if (c.hasOut)   { cls = 'cell-warn'; text = `<div class="text-[11px] text-yellow-700">退のみ</div><div class="text-[11px]">${fmtHHmm(c.lastOut)}</div>`; }
@@ -266,13 +230,13 @@
       if (!matrix[p.employeeId][p.dateKey]) matrix[p.employeeId][p.dateKey] = [];
       matrix[p.employeeId][p.dateKey].push(p);
     }
-    const rows = [['社員ID','氏名','部門','日付','曜日','出勤','退勤','休憩h','退出h','実働h','備考']];
+    const rows = [['社員ID','氏名','部門','日付','曜日','出勤','退勤','休憩h','実働h','備考']];
     const wlabel = ['日','月','火','水','木','金','土'];
     for (const emp of emps) {
       for (const dateKey of days) {
         const ps = matrix[emp.id]?.[dateKey];
         const wd = new Date(dateKey).getDay();
-        if (!ps || ps.length === 0) { rows.push([emp.id, emp.name, emp.dept||'', dateKey, wlabel[wd], '', '', '', '', '', '']); continue; }
+        if (!ps || ps.length === 0) { rows.push([emp.id, emp.name, emp.dept||'', dateKey, wlabel[wd], '', '', '', '', '']); continue; }
         const c = computeWorkHours(ps);
         let hrs = '', note = '';
         if (c.hasIn && c.hasOut) hrs = msToHours(c.workMs).toFixed(2);
@@ -280,7 +244,7 @@
         else if (c.hasOut) note = '出勤打刻なし';
         rows.push([emp.id, emp.name, emp.dept||'', dateKey, wlabel[wd],
           c.firstIn ? fmtHHmm(c.firstIn) : '', c.lastOut ? fmtHHmm(c.lastOut) : '',
-          msToHours(c.breakMs).toFixed(2), msToHours(c.leaveMs).toFixed(2),
+          msToHours(c.breakMs).toFixed(2),
           hrs, note]);
       }
     }

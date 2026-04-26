@@ -96,8 +96,9 @@
         <div class="grid grid-cols-2 gap-3 mt-4">
           <button id="btnIn"    class="btn-punch kiosk-btn btn-in"    disabled>出 勤</button>
           <button id="btnOut"   class="btn-punch kiosk-btn btn-out"   disabled>退 勤</button>
+        </div>
+        <div class="grid grid-cols-1 gap-3 mt-3">
           <button id="btnBreak" class="btn-punch kiosk-btn btn-break" style="min-height:90px; font-size:clamp(18px,3vw,28px);" disabled>休 憩</button>
-          <button id="btnLeave" class="btn-punch kiosk-btn btn-leave" style="min-height:90px; font-size:clamp(18px,3vw,28px);" disabled>一時退出</button>
         </div>
         <div id="logs" class="bg-white rounded-xl border border-gray-200 p-4 text-sm mt-4">
           <div class="text-gray-400 text-center py-2">氏名を選ぶと本日の打刻履歴が表示されます</div>
@@ -162,7 +163,6 @@
       none:     `<span class="pill-no">未出勤</span>`,
       working:  `<span class="pill-in">勤務中</span>`,
       on_break: `<span class="pill-no" style="background:#fef3c7;color:#92400e">休憩中</span>`,
-      away:     `<span class="pill-no" style="background:#e0e7ff;color:#3730a3">一時退出</span>`,
       done:     `<span class="pill-out">退勤済</span>`,
     };
     const rows = allEmployees.map(emp => {
@@ -172,10 +172,10 @@
       return { emp, c, hrs, state: STATE_PILL[c.status], punched: punches.length > 0 };
     });
     rows.sort((a, b) => (b.punched ? 1 : 0) - (a.punched ? 1 : 0));
-    const counts = { working: 0, on_break: 0, away: 0, done: 0 };
+    const counts = { working: 0, on_break: 0, done: 0 };
     for (const r of rows) if (counts[r.c.status] !== undefined) counts[r.c.status]++;
     document.getElementById('activitySummary').textContent =
-      `勤務中 ${counts.working} / 休憩 ${counts.on_break} / 退出 ${counts.away} / 退勤済 ${counts.done} / 全${rows.length}名`;
+      `勤務中 ${counts.working} / 休憩 ${counts.on_break} / 退勤済 ${counts.done} / 全${rows.length}名`;
     const tbody = document.getElementById('todayTable');
     if (rows.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-6">従業員マスタが空です（office で /employees から登録）</td></tr>';
@@ -216,7 +216,6 @@
       none:     { text: '未出勤',   cls: 'text-gray-600' },
       working:  { text: '勤務中',   cls: 'text-green-600' },
       on_break: { text: '休憩中',   cls: 'text-amber-600' },
-      away:     { text: '一時退出中', cls: 'text-indigo-600' },
       done:     { text: '退勤済み', cls: 'text-gray-500' }
     };
     val.textContent = map[c.status].text;
@@ -228,47 +227,33 @@
     const btnIn    = document.getElementById('btnIn');
     const btnOut   = document.getElementById('btnOut');
     const btnBreak = document.getElementById('btnBreak');
-    const btnLeave = document.getElementById('btnLeave');
-    // reset
-    [btnIn, btnOut, btnBreak, btnLeave].forEach(b => { b.disabled = true; b.classList.remove('active'); });
+    [btnIn, btnOut, btnBreak].forEach(b => { b.disabled = true; b.classList.remove('active'); });
     btnBreak.textContent = '休 憩';
-    btnLeave.textContent = '一時退出';
     btnBreak.dataset.action = 'break_start';
-    btnLeave.dataset.action = 'leave_start';
 
     if (status === 'none' || status === 'done') {
       btnIn.disabled = false;
     } else if (status === 'working') {
       btnOut.disabled = false;
       btnBreak.disabled = false;
-      btnLeave.disabled = false;
     } else if (status === 'on_break') {
       btnBreak.disabled = false;
       btnBreak.textContent = '休憩終了';
       btnBreak.classList.add('active');
       btnBreak.dataset.action = 'break_end';
-      btnOut.disabled = false; // 休憩中の直帰も許容（confirm警告あり）
-    } else if (status === 'away') {
-      btnLeave.disabled = false;
-      btnLeave.textContent = '戻 り';
-      btnLeave.classList.add('active');
-      btnLeave.dataset.action = 'leave_end';
-      btnOut.disabled = false; // 退出中のまま退勤も許容
+      btnOut.disabled = false; // 休憩中の直帰も許容
     }
   }
 
   const TYPE_LABEL = {
     in: '出勤', out: '退勤',
     break_start: '休憩開始', break_end: '休憩終了',
-    leave_start: '一時退出', leave_end: '戻り',
   };
   const TYPE_PILL = {
     in:           'bg-green-100 text-green-800',
     out:          'bg-red-100 text-red-800',
     break_start:  'bg-amber-100 text-amber-800',
     break_end:    'bg-amber-50 text-amber-700',
-    leave_start:  'bg-indigo-100 text-indigo-800',
-    leave_end:    'bg-indigo-50 text-indigo-700',
   };
 
   function renderLogs() {
@@ -279,7 +264,7 @@
       return;
     }
     const summary = (c.hasIn && c.hasOut)
-      ? `<div class="mb-2 text-xs text-gray-600">実働 <b>${msToHours(c.workMs).toFixed(2)}h</b> / 休憩 ${msToHours(c.breakMs).toFixed(2)}h / 退出 ${msToHours(c.leaveMs).toFixed(2)}h</div>`
+      ? `<div class="mb-2 text-xs text-gray-600">実働 <b>${msToHours(c.workMs).toFixed(2)}h</b> / 休憩 ${msToHours(c.breakMs).toFixed(2)}h</div>`
       : '';
     logsEl.innerHTML = `
       <div class="text-xs font-bold text-gray-500 mb-2">本日の打刻履歴</div>
@@ -298,7 +283,6 @@
   document.getElementById('btnIn').addEventListener('click', () => doPunch('in'));
   document.getElementById('btnOut').addEventListener('click', () => doPunch('out'));
   document.getElementById('btnBreak').addEventListener('click', (e) => doPunch(e.currentTarget.dataset.action || 'break_start'));
-  document.getElementById('btnLeave').addEventListener('click', (e) => doPunch(e.currentTarget.dataset.action || 'leave_start'));
 
   async function doPunch(type) {
     const empId = selectEl.value;
@@ -330,7 +314,7 @@
 
   // 本日CSV
   document.getElementById('csvBtn').addEventListener('click', () => {
-    const rows = [['日付','社員ID','氏名','部門','出勤','退勤','休憩h','退出h','実働h','備考']];
+    const rows = [['日付','社員ID','氏名','部門','出勤','退勤','休憩h','実働h','備考']];
     const byEmp = {};
     for (const p of todayAllPunches) {
       if (!byEmp[p.employeeId]) byEmp[p.employeeId] = [];
@@ -343,7 +327,7 @@
       else if (!c.hasIn && c.hasOut) note = '出勤打刻なし';
       rows.push([today, emp.id, emp.name, emp.dept || '',
         c.firstIn ? fmtHHmm(c.firstIn) : '', c.lastOut ? fmtHHmm(c.lastOut) : '',
-        msToHours(c.breakMs).toFixed(2), msToHours(c.leaveMs).toFixed(2),
+        msToHours(c.breakMs).toFixed(2),
         (c.hasIn && c.hasOut) ? msToHours(c.workMs).toFixed(2) : '', note]);
     }
     const csv = '﻿' + rows.map(r => r.map(c => {

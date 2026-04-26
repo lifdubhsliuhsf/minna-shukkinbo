@@ -16,6 +16,3 @@ body { -webkit-tap-highlight-color: transparent; }
 .btn-break { background: #f59e0b; color: #fff; }
 .btn-break:hover:not(:disabled) { background: #d97706; }
 .btn-break.active { background: #b45309; box-shadow: inset 0 0 0 3px #fde68a; }
-.btn-leave { background: #6366f1; color: #fff; }
-.btn-leave:hover:not(:disabled) { background: #4f46e5; }
-.btn-leave.active { background: #4338ca; box-shadow: inset 0 0 0 3px #c7d2fe; }

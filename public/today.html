@@ -50,7 +50,6 @@
     none:     { label: '未',  cls: 'text-gray-400' },
     working:  { label: '勤',  cls: 'text-green-700 font-bold' },
     on_break: { label: '休',  cls: 'text-amber-700 font-bold' },
-    away:     { label: '退出', cls: 'text-indigo-700 font-bold' },
     done:     { label: '退',  cls: 'text-gray-500' }
   };
 
@@ -84,7 +83,6 @@
             <th class="text-center p-2">出勤</th>
             <th class="text-center p-2">退勤</th>
             <th class="text-center p-2">休憩</th>
-            <th class="text-center p-2">退出</th>
             <th class="text-center p-2">実働</th>
             <th class="text-center p-2">状態</th>
           </tr>
@@ -101,7 +99,6 @@
               <td class="p-2 text-center tabular-nums ${c.firstIn ? 'text-green-700 font-bold' : ''}">${c.firstIn ? fmtHHmm(c.firstIn) : '—'}</td>
               <td class="p-2 text-center tabular-nums ${c.lastOut ? 'text-red-700 font-bold' : ''}">${c.lastOut ? fmtHHmm(c.lastOut) : '—'}</td>
               <td class="p-2 text-center tabular-nums text-xs">${c.breakMs ? msToHours(c.breakMs).toFixed(2) + 'h' : '—'}</td>
-              <td class="p-2 text-center tabular-nums text-xs">${c.leaveMs ? msToHours(c.leaveMs).toFixed(2) + 'h' : '—'}</td>
               <td class="p-2 text-center tabular-nums">${work}</td>
               <td class="p-2 text-center text-xs ${st.cls}">${st.label}</td>
             </tr>`;
